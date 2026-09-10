@@ -1,0 +1,123 @@
+{
+  "version": 1,
+  "skills": [
+    {
+      "name": "acquire-codebase-knowledge",
+      "notice": {"copyright": "Copyright GitHub, Inc."},
+      "ownership": "Third-party",
+      "license": "MIT",
+      "source": "https://github.com/github/awesome-copilot",
+      "revision": "7b1ebe6333397841ca918dec904d24d4695fe953",
+      "attribution": "GitHub",
+      "modifications": "Codex-incompatible optional frontmatter moved under metadata."
+    },
+    {
+      "name": "create-agentsmd",
+      "notice": {"copyright": "Copyright GitHub, Inc."},
+      "ownership": "Third-party",
+      "license": "MIT",
+      "source": "https://github.com/github/awesome-copilot",
+      "revision": "7b1ebe6333397841ca918dec904d24d4695fe953",
+      "attribution": "GitHub",
+      "modifications": "No local modifications beyond packaging."
+    },
+    {
+      "name": "incident-postmortem",
+      "notice": {"copyright": "Copyright GitHub, Inc."},
+      "ownership": "Third-party",
+      "license": "MIT",
+      "source": "https://github.com/github/awesome-copilot",
+      "revision": "7b1ebe6333397841ca918dec904d24d4695fe953",
+      "attribution": "GitHub",
+      "modifications": "No local modifications beyond packaging."
+    },
+    {
+      "name": "load-testing",
+      "ownership": "Team-owned",
+      "license": "Team-owned",
+      "source": "Local team skill",
+      "revision": "Local validated package",
+      "attribution": "Team Engineering Skills Marketplace",
+      "modifications": "Maintained by the team."
+    },
+    {
+      "name": "mcp-builder",
+      "notice": {"license_file": "LICENSE.txt"},
+      "ownership": "Third-party",
+      "license": "Apache-2.0",
+      "source": "https://github.com/anthropics/skills",
+      "revision": "41bbe19d1a1a7eaab5e7bb9050a417e5c6cffc8f",
+      "attribution": "Anthropic",
+      "modifications": "No local modifications beyond packaging."
+    },
+    {
+      "name": "mentoring-juniors",
+      "notice": {"copyright": "Copyright GitHub, Inc."},
+      "ownership": "Third-party",
+      "license": "MIT",
+      "source": "https://github.com/github/awesome-copilot",
+      "revision": "7b1ebe6333397841ca918dec904d24d4695fe953",
+      "attribution": "GitHub",
+      "modifications": "Author metadata moved into a supported metadata block."
+    },
+    {
+      "name": "property-based-testing",
+      "notice": {"license_url": "https://creativecommons.org/licenses/by-sa/4.0/"},
+      "ownership": "Third-party",
+      "license": "CC-BY-SA-4.0",
+      "source": "https://github.com/trailofbits/skills",
+      "revision": "d3323cefbcf645678b8dc481de204b02ad3d02dc",
+      "attribution": "Trail of Bits",
+      "modifications": "Unsupported effort field moved under metadata; Codex agent-interface display metadata added during packaging."
+    },
+    {
+      "name": "selecting-quality-engineering-tools",
+      "ownership": "Team-owned",
+      "license": "Team-owned",
+      "source": "Local team skill",
+      "revision": "Local validated package",
+      "attribution": "Team Engineering Skills Marketplace",
+      "modifications": "Maintained by the team. Packaged workflow makes absent related skills optional and includes standalone browser E2E, security-testing, and design-system guidance."
+    },
+    {
+      "name": "sharp-edges",
+      "notice": {"license_url": "https://creativecommons.org/licenses/by-sa/4.0/"},
+      "ownership": "Third-party",
+      "license": "CC-BY-SA-4.0",
+      "source": "https://github.com/trailofbits/skills",
+      "revision": "d3323cefbcf645678b8dc481de204b02ad3d02dc",
+      "attribution": "Trail of Bits",
+      "modifications": "Codex agent-interface display metadata added during packaging."
+    },
+    {
+      "name": "supabase",
+      "notice": {"copyright": "Copyright (c) 2026 Supabase"},
+      "ownership": "Third-party",
+      "license": "MIT",
+      "source": "https://github.com/supabase/agent-skills",
+      "revision": "8331f910845103c08d51f6ca1d86ebb7d1f745e3",
+      "attribution": "Supabase",
+      "modifications": "No local modifications beyond packaging."
+    },
+    {
+      "name": "supply-chain-risk-auditor",
+      "notice": {"license_url": "https://creativecommons.org/licenses/by-sa/4.0/"},
+      "ownership": "Third-party",
+      "license": "CC-BY-SA-4.0",
+      "source": "https://github.com/trailofbits/skills",
+      "revision": "d3323cefbcf645678b8dc481de204b02ad3d02dc",
+      "attribution": "Trail of Bits",
+      "modifications": "Codex agent-interface display metadata added during packaging."
+    },
+    {
+      "name": "variant-analysis",
+      "notice": {"license_url": "https://creativecommons.org/licenses/by-sa/4.0/"},
+      "ownership": "Third-party",
+      "license": "CC-BY-SA-4.0",
+      "source": "https://github.com/trailofbits/skills",
+      "revision": "d3323cefbcf645678b8dc481de204b02ad3d02dc",
+      "attribution": "Trail of Bits",
+      "modifications": "Codex agent-interface display metadata added during packaging."
+    }
+  ]
+}

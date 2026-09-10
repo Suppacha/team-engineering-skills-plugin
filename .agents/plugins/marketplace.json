@@ -1,0 +1,17 @@
+{
+  "name": "team-engineering-skills-marketplace",
+  "interface": {
+    "displayName": "Team Engineering Skills"
+  },
+  "plugins": [
+    {
+      "name": "team-engineering-skills",
+      "source": {"source": "local", "path": "./plugins/team-engineering-skills"},
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_USE"
+      },
+      "category": "developer-tools"
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+interface:
+  display_name: "Quality Engineering Tools"
+  short_description: "Choose a focused, maintainable test stack"
+  default_prompt: "Use $selecting-quality-engineering-tools to choose the smallest effective testing stack for this project."
+
+policy:
+  allow_implicit_invocation: true

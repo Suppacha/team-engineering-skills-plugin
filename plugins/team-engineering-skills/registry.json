@@ -1,0 +1,122 @@
+{
+  "schema_version": 1,
+  "version": "2.0.0",
+  "owner": "Suppacha",
+  "standards": {
+    "ai-usage.md": "3305c0c55d1248b14ba99bfbf6cbfa8652448d378d85810d8b0308596b01a79e",
+    "coding-output.md": "66535716d2227b3255c6ac973228eb76d9f161446b55be3091e6a511307a61c4",
+    "data-access.md": "11d25b7e62c23f307dbd82a9019f5eeb9d9c8bfc5e71fd03c500b5821b217188",
+    "security.md": "e976fee85d190828613bab6628dc2e651f4532b70ad57357e39b043ef9d3cf6e"
+  },
+  "skills": [
+    {
+      "name": "acquire-codebase-knowledge",
+      "version": "1.0.0",
+      "owner": "Suppacha",
+      "routes": [
+        "Map or document an unfamiliar codebase"
+      ],
+      "tree_sha256": "d21f2d59e464dad9396cc9fe36136b7d59e7a0995054e88faa506034a23d03d0"
+    },
+    {
+      "name": "create-agentsmd",
+      "version": "1.0.0",
+      "owner": "Suppacha",
+      "routes": [
+        "Create repository agent instructions"
+      ],
+      "tree_sha256": "e00f773656e4686c061fd6aa0642bd9f7fb8b2b2677e5cd8b0d253e10150a27a"
+    },
+    {
+      "name": "incident-postmortem",
+      "version": "1.0.0",
+      "owner": "Suppacha",
+      "routes": [
+        "Write a blameless incident postmortem"
+      ],
+      "tree_sha256": "c846e2fa69c854ada0116905a9b50479ccc58addee4f70cefd65cf7c06958838"
+    },
+    {
+      "name": "load-testing",
+      "version": "1.0.0",
+      "owner": "Suppacha",
+      "routes": [
+        "Plan or implement authorized load and performance tests"
+      ],
+      "tree_sha256": "7eca56c07aaee4752f43ecda1adea6fa477e195df7a68b844571b38c13f00149"
+    },
+    {
+      "name": "mcp-builder",
+      "version": "1.0.0",
+      "owner": "Suppacha",
+      "routes": [
+        "Build or review an MCP server"
+      ],
+      "tree_sha256": "80cb808ff091844da53b1b34d334ff0f5de6b30dd61fae497d0f749bb0f36148"
+    },
+    {
+      "name": "mentoring-juniors",
+      "version": "1.0.0",
+      "owner": "Suppacha",
+      "routes": [
+        "Teach or mentor junior developers"
+      ],
+      "tree_sha256": "ab51b016aba392dc14e66ad00856fdda02bc9b55b31d51681f76ab76c7265627"
+    },
+    {
+      "name": "property-based-testing",
+      "version": "1.0.0",
+      "owner": "Suppacha",
+      "routes": [
+        "Write or review generative property-based tests"
+      ],
+      "tree_sha256": "66bfcf31098de2a0418e7fd48d8877e6fd5085a813e934b96e6fa149fa1e7253"
+    },
+    {
+      "name": "selecting-quality-engineering-tools",
+      "version": "1.0.0",
+      "owner": "Suppacha",
+      "routes": [
+        "Choose browser E2E or quality engineering tools",
+        "Choose frontend design-system validation tools"
+      ],
+      "tree_sha256": "616ba1a9f3549b260eff00d88411e1ed07e99d73beae0e34888eb12b69f6dca9"
+    },
+    {
+      "name": "sharp-edges",
+      "version": "1.0.0",
+      "owner": "Suppacha",
+      "routes": [
+        "Review error-prone APIs or dangerous configuration"
+      ],
+      "tree_sha256": "7d4b23253a87a5cefa3b9b5b68fec98f379df07e0123850e00db4c8312d43582"
+    },
+    {
+      "name": "supabase",
+      "version": "1.0.0",
+      "owner": "Suppacha",
+      "routes": [
+        "Work on Supabase schema queries or integration"
+      ],
+      "tree_sha256": "587f3495366300709a0f8e300ac94ece42a874d2f731167a88daa714e55dff1b"
+    },
+    {
+      "name": "supply-chain-risk-auditor",
+      "version": "1.0.0",
+      "owner": "Suppacha",
+      "routes": [
+        "Audit dependency supply-chain risk"
+      ],
+      "tree_sha256": "1aff68860b106ade48577eeecfc4ba5d60ccda536588a0f66d8fda946b51eccb"
+    },
+    {
+      "name": "variant-analysis",
+      "version": "1.0.0",
+      "owner": "Suppacha",
+      "routes": [
+        "Find variants of an already identified bug"
+      ],
+      "tree_sha256": "5e2bceadd495649b46e891d1099c0938b4b05246e10b0338c0948965e13a7b5c"
+    }
+  ]
+}

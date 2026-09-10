@@ -1,0 +1,7 @@
+interface:
+  display_name: "Load Testing"
+  short_description: "Plan, run, and assess safe load tests"
+  default_prompt: "Use $load-testing to design a safe, evidence-backed load test and readiness verdict."
+
+policy:
+  allow_implicit_invocation: true

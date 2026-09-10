@@ -1,0 +1,21 @@
+{
+  "name": "team-engineering-skills-marketplace",
+  "owner": {
+    "name": "Suppacha"
+  },
+  "metadata": {
+    "description": "Curated engineering workflows for quality, security, frontend, platform, and incident work."
+  },
+  "plugins": [
+    {
+      "name": "team-engineering-skills",
+      "description": "Curated engineering workflows for quality, security, frontend, platform, and incident work.",
+      "version": "2.0.0",
+      "author": {
+        "name": "Suppacha"
+      },
+      "license": "MIT",
+      "source": "./plugins/team-engineering-skills"
+    }
+  ]
+}

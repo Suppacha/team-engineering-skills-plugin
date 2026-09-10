@@ -1,0 +1,35 @@
+name: Sanitized skill feedback
+description: Manually report a discovery or workflow issue without private data.
+title: "[Feedback] "
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: "This repository is public. Do not include secrets, source code from private projects, customer data, raw logs or full prompts. Use a synthetic example."
+  - type: input
+    id: versions
+    attributes:
+      label: Client and framework versions
+      description: "For example: Codex or Claude Code client version; framework 2.0.0."
+    validations:
+      required: true
+  - type: input
+    id: skill
+    attributes:
+      label: Selected or expected skill
+    validations:
+      required: true
+  - type: textarea
+    id: result
+    attributes:
+      label: Sanitized task, expected behavior and observed result
+      description: Use made-up data. State whether the skill was discovered automatically.
+    validations:
+      required: true
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Public sharing review
+      options:
+        - label: I reviewed this report and it contains no secrets or private/customer data.
+          required: true

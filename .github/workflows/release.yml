@@ -1,0 +1,23 @@
+name: Build reviewed release artifact
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Verify and build deterministic ZIP
+        run: bash scripts/build-release.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: reviewed-framework-release
+          path: dist/*.zip
+          if-no-files-found: error
+          retention-days: 14
