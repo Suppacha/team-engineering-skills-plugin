@@ -1,11 +1,28 @@
 # เริ่มใช้ Team AI Operating Framework V2
 
-Owner: Suppacha · Version: 2.0.0 · Repository นี้เป็น **public**:
+Owner: Suppacha · Version: 2.1.0 · Repository นี้เป็น **public**:
 [Suppacha/team-engineering-skills-plugin](https://github.com/Suppacha/team-engineering-skills-plugin)
 
-ทีมใช้มาตรฐานและ 12 skills ชุดเดียวกัน แต่แต่ละคนเลือก Codex หรือ Claude Code
+ทีมใช้มาตรฐานและ 15 skills ชุดเดียวกัน แต่ละคนเลือก Codex หรือ Claude Code
 และใช้บัญชีที่องค์กรอนุมัติของตนเอง ไม่มีการแชร์บัญชีหรือเลือก/สลับผู้ให้บริการอัตโนมัติ
 ระบบช่วยเลือก skill ตามงานใน client ที่เปิดอยู่ ไม่รับประกันว่า model จะเลือกถูกทุกครั้ง
+
+## Workflow ใหม่: Requirement → UI → Test Case
+
+เริ่มจากข้อมูลที่ project อนุญาตให้ใช้ และสร้าง artifact ใน project นั้น ไม่ส่งไฟล์ต้นฉบับ
+หรือผลลัพธ์ไปบริการอื่นโดยอัตโนมัติ
+
+1. ใช้ `requirement-analysis` แยกข้อมูลที่ยืนยันแล้ว สมมติฐาน คำถาม ขอบเขต
+   business rules และ acceptance criteria ให้ `REQ-001` อ้าง `UC-001` อย่างชัดเจน
+2. ใช้ `ui-design-specification` อ่าน requirement ก่อน แล้วกำหนด role, workflow,
+   screen `UI-001`, validation, permissions และ loading/empty/error/success/access-denied states
+   ใช้ design system ของ project; ไม่บังคับ component library กลาง
+3. ใช้ `test-case-design` สร้าง `TS-001` และ `TC-001` ที่ precondition, test data,
+   steps และ expected result สัมพันธ์กัน เก็บ Actual Result, Tested By และ Test Date ว่าง
+   จนกว่าจะรันจริง และห้ามตีความ `Upload jira` เป็นสิทธิ์ upload
+
+Trace ตัวอย่างสมมติคือ `REQ-001 → UC-001 → UI-001 → TS-001 → TC-001`.
+Template และตัวอย่าง appointment booking ใน package สร้างใหม่ทั้งหมด ไม่ใช่ข้อมูลจากเอกสารอ้างอิง
 
 ## 1. ติดตั้ง plugin
 
@@ -61,6 +78,23 @@ python3 /path/to/release/plugins/team-engineering-skills/scripts/bootstrap-proje
 ตรวจว่าอ่าน policy ได้, skill ที่เลือกตรงงาน, และแจ้งเมื่อ skill ไม่มี
 บันทึก client/version, framework version, task category, skill, ผลทดสอบและข้อจำกัดด้วยตนเอง
 ยังต้องทดสอบ interactive จริง; unit tests ไม่พิสูจน์ว่า model จะทำตาม instruction เสมอ
+
+### Manual discovery สำหรับ workflow ใหม่
+
+สถานะ ณ รุ่น 2.1.0: scenario ด้านล่างเป็นข้อมูลสมมติและ **ยังไม่ผ่านการยืนยันกับ live client**.
+ให้รันแยกใน Codex และ Claude Code หลังติดตั้ง แล้วบันทึก client/version และผลที่สังเกตจริง
+
+1. `วิเคราะห์ requirement สำหรับระบบนัดหมายสมมติ แยกข้อมูลยืนยัน สมมติฐาน business rules และ acceptance criteria`
+   คาดหวังให้เลือก `requirement-analysis` และไม่สร้าง TOR หรือคำตอบ stakeholder เอง
+2. `ออกแบบ UI specification จาก REQ-001 และ UC-001 สำหรับการเลือกเวลานัดหมาย`
+   คาดหวังให้เลือก `ui-design-specification` และครอบคลุม role, workflow, validation และ states
+3. `สร้าง test scenario และ test case จาก REQ-001, UC-001 และ UI-001 โดยยังไม่รันทดสอบ`
+   คาดหวังให้เลือก `test-case-design`, แสดง `TS-001`/`TC-001`, ไม่ใส่หลักฐานการรันปลอม
+   และไม่ upload Jira
+4. ตรวจ artifact ทั้งสามร่วมกัน: references ต้องไม่ขาดหรือซ้ำ และ status ที่ยังไม่รันต้องไม่เป็น PASS
+
+ผล unit tests ตรวจ schema, package และไฟล์ template เท่านั้น ไม่ใช่หลักฐาน model behavior
+หรือผล pilot ของ Codex/Claude Code
 
 หากจะส่ง feedback ให้ใช้ [Issues](https://github.com/Suppacha/team-engineering-skills-plugin/issues)
 และกรอกข้อมูลสังเคราะห์/ลบข้อมูลอ่อนไหวแล้วเท่านั้น ไม่มีระบบ upload อัตโนมัติ

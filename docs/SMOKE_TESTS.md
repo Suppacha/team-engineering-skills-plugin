@@ -14,6 +14,9 @@ explicit skill name.
 | Supabase | `Review this Supabase schema and query path for performance and security improvements.` | Supabase guidance is used. |
 | Bug reproduction | `Turn this intermittent production failure into a bug reproduction brief with observations, environment details, and minimal steps.` | Bug reproduction is acknowledged as an external workflow; it is not bundled because its redistribution evidence is unverified. |
 | Incident postmortem | `Write a blameless incident postmortem for yesterday's API outage, including timeline, impact, root cause, and follow-up actions.` | Incident-postmortem guidance is used. |
+| Requirement | `Analyze requirements for a fictional appointment-booking flow. Separate confirmed inputs, assumptions, business rules, and acceptance criteria.` | Requirement-analysis guidance is used; no TOR or stakeholder answer is invented. |
+| UI specification | `Specify the UI for synthetic REQ-001 and UC-001, including roles, workflow, validation, permissions, and empty/error/success states.` | UI-design-specification guidance is used without forcing a component library. |
+| Test case | `Design scenarios and cases for synthetic REQ-001, UC-001, and UI-001. Do not execute or upload anything.` | Test-case-design guidance is used; run evidence stays blank and not-run is not PASS. |
 
 If an expected bundled workflow is not discovered, verify the installed plugin
 is `team-engineering-skills@team-engineering-skills-marketplace`, then reload plugins in
@@ -26,7 +29,7 @@ Use a disposable project with synthetic data. Run each check in both clients and
 record the client/version, framework version, selected skill and actual outcome.
 
 1. Bootstrap with `--dry-run`: no project files should appear. Bootstrap normally:
-   inspect AGENTS.md, CLAUDE.md and .team-ai/release.json. Confirm version 2.0.0.
+   inspect AGENTS.md, CLAUDE.md and .team-ai/release.json. Confirm version 2.1.0.
 2. Ask: `Summarize this project's AI data-handling constraints and list the policy files you read.`
    Expect the four local standards, cloud-transmission warning and no secrets read.
 3. Use the discovery prompts above without explicit skill names. Expect semantic
@@ -45,3 +48,11 @@ record the client/version, framework version, selected skill and actual outcome.
 Store sanitized results manually in an approved location. Public Issues may
 contain client/version, task category, selected skill and synthetic observations;
 never attach real secrets, private code, raw logs or full prompt history.
+
+## V2.1 three-artifact discovery (synthetic; not yet live-client verified)
+
+Run the Requirement, UI specification, and Test case prompts above in both clients.
+Confirm an explicit `REQ-001` → `UC-001` → `UI-001` → `TS-001` → `TC-001`
+trace, visible gaps, and no fabricated execution or upload. These prompts have not
+yet been verified against live Codex or Claude Code clients. Unit tests validate
+package invariants and templates only; they are not model-behavior evidence.
