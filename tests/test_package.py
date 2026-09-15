@@ -46,10 +46,13 @@ APPROVED = {
     "mcp-builder",
     "mentoring-juniors",
     "property-based-testing",
+    "requirement-analysis",
     "selecting-quality-engineering-tools",
     "sharp-edges",
     "supabase",
     "supply-chain-risk-auditor",
+    "test-case-design",
+    "ui-design-specification",
     "variant-analysis",
 }
 
@@ -230,7 +233,7 @@ def test_dual_manifests_share_identity_and_version():
     claude = json.loads((PLUGIN_ROOT / ".claude-plugin/plugin.json").read_text())
     version = (PLUGIN_ROOT / "VERSION").read_text().strip()
     assert codex["name"] == claude["name"] == "team-engineering-skills"
-    assert codex["version"] == claude["version"] == version == "2.0.0"
+    assert codex["version"] == claude["version"] == version == "2.1.0"
 
 
 def test_claude_marketplace_uses_local_plugin_source():

@@ -40,7 +40,7 @@ class BootstrapTests(unittest.TestCase):
         self.assertIn(".team-ai/standards/security.md", agents)
         self.assertIn("supply-chain-risk-auditor", agents)
         evidence = json.loads((self.project / ".team-ai/release.json").read_text())
-        self.assertEqual(evidence["version"], "2.0.0")
+        self.assertEqual(evidence["version"], "2.1.0")
         self.assertNotIn(str(self.project), json.dumps(evidence))
         for name, digest in evidence["sha256"].items():
             self.assertEqual(hashlib.sha256((self.project / ".team-ai" / name).read_bytes()).hexdigest(), digest)
@@ -142,10 +142,11 @@ class RegistryTests(unittest.TestCase):
         mutation(registry)
         path.write_text(json.dumps(registry))
 
-    def test_valid_release_covers_all_twelve_skills(self):
+    def test_valid_release_covers_all_fifteen_skills(self):
         registry = self.module.validate_release(self.plugin)
         lock = json.loads((ROOT / "config/skills-lock.json").read_text())
         self.assertEqual({s["name"] for s in registry["skills"]}, {s["name"] for s in lock["skills"]})
+        self.assertEqual(len(registry["skills"]), 15)
         self.assertEqual(registry["owner"], "Suppacha")
 
     def test_invalid_metadata_is_rejected(self):

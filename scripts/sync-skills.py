@@ -18,6 +18,7 @@ ALLOWED_OWNERSHIP = {"Team-owned", "Third-party"}
 ALLOWED_THIRD_PARTY_LICENSES = {"MIT", "Apache-2.0", "CC-BY-SA-4.0"}
 PLACEHOLDERS = {"unknown", "unverified", "tbd", "todo", "n/a", "none"}
 SKILL_NAME = re.compile(r"^[a-z0-9][a-z0-9-]*$")
+REPOSITORY_OWNED_SOURCE = "Repository-owned canonical skill"
 RUNTIME_ARTIFACTS = {
     ".DS_Store",
     ".coverage",
@@ -112,6 +113,8 @@ def validate_license_evidence(skill: Dict[str, Any]) -> None:
         if license_name != "Team-owned":
             raise ValueError("team-owned entries must use the Team-owned license class")
         return
+    if skill.get("source") == REPOSITORY_OWNED_SOURCE:
+        raise ValueError("repository-owned canonical skills must be Team-owned")
     if not isinstance(license_name, str) or license_name not in ALLOWED_THIRD_PARTY_LICENSES:
         raise ValueError(f"unapproved license: {license_name!r}")
     if not meaningful_text(skill.get("source")) or not re.fullmatch(r"https://[^\s/]+/\S+", skill["source"]):
@@ -360,11 +363,16 @@ def sync() -> None:
     source_dirs = []
     for skill in skills:
         name = skill["name"]
-        source_dir = source_root / name
+        if skill["source"] == REPOSITORY_OWNED_SOURCE:
+            source_dir = destination_root / name
+            source_parent = destination_root.resolve()
+        else:
+            source_dir = source_root / name
+            source_parent = source_root
         if not source_dir.exists() or not source_dir.is_dir():
             raise ValueError(f"allowlisted source skill is missing: {source_dir}")
         resolved_source_dir = source_dir.resolve(strict=True)
-        require_within(resolved_source_dir, source_root, "source skill")
+        require_within(resolved_source_dir, source_parent, "source skill")
         validate_source_tree(source_dir)
         license_file = skill.get("notice", {}).get("license_file")
         if license_file:

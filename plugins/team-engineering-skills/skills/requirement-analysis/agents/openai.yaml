@@ -1,0 +1,6 @@
+interface:
+  display_name: "Requirement analysis"
+  short_description: "Turn discovery evidence into traceable requirements"
+  default_prompt: "Use $requirement-analysis to analyze these needs and produce evidence-aware requirements."
+policy:
+  allow_implicit_invocation: true

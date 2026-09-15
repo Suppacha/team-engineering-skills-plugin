@@ -10,7 +10,7 @@
     {
       "name": "team-engineering-skills",
       "description": "Curated engineering workflows for quality, security, frontend, platform, and incident work.",
-      "version": "2.0.0",
+      "version": "2.1.0",
       "author": {
         "name": "Suppacha"
       },
