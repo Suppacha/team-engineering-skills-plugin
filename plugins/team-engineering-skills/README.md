@@ -54,6 +54,12 @@ policy snapshot from an explicitly supplied extracted marketplace root.
 It refuses existing AGENTS.md, CLAUDE.md and .team-ai targets; it never installs
 clients, changes accounts, runs scans or uploads telemetry.
 
+`scripts/team_workflows.py` validates traceability linkage and previews the
+strict metadata allowlist offline. `scripts/project-update.py` validates an
+existing V2 snapshot and creates a separate, review-only migration proposal;
+it never mutates the source project or runs Git. Input schemas and synthetic
+examples are included in `schemas/` and `examples/`.
+
 Plugin installation does not itself activate project policy. Bootstrap and review
 the project files separately; full instructions are in the marketplace README.
 AGENTS.md/CLAUDE.md are advisory. Cloud model calls may transmit code despite

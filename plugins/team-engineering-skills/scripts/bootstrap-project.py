@@ -5,12 +5,12 @@ No project contents are read, no clients installed, no commands executed, no
 network calls made. Run only from a trusted release on a quiescent local folder.
 """
 import argparse
-import json
 from pathlib import Path
 import sys
 
 sys.dont_write_bytecode = True
-from framework import digest, safe_directory, validate_release
+from framework import safe_directory, validate_release
+from project_snapshot import release_evidence, render_agents, snapshot_payload, write_snapshot
 
 
 def bootstrap(release, project, dry_run=False):
@@ -23,52 +23,16 @@ def bootstrap(release, project, dry_run=False):
         raise ValueError("refusing existing AGENTS.md, CLAUDE.md or .team-ai; merge manually in a reviewed PR")
     plugin = release / "plugins/team-engineering-skills"
     registry = validate_release(plugin)
-    payload = {"registry.json": (plugin / "registry.json").read_bytes()}
-    for name in sorted(registry["standards"]):
-        payload["standards/" + name] = (plugin / "standards" / name).read_bytes()
-    evidence = {
-        "schema_version": 1, "version": registry["version"],
-        "owner": registry["owner"], "sha256": {name: digest(data) for name, data in payload.items()},
-        "provenance": "Explicit local release; hashes detect drift, not publisher authenticity.",
-    }
-    lines = [
-        "# Team AI Operating Framework", "", "Release: " + registry["version"], "",
-        "Read these local standards before acting:", "",
-        *["- .team-ai/standards/" + name for name in sorted(registry["standards"])], "",
-        "These instructions are advisory, not a security boundary. Respect higher-priority",
-        "client instructions, user authorization and project-specific constraints; stop on conflicts.",
-        "Cloud model calls can send code off this computer. Do not read or transmit secrets.", "",
-        "## Skill selection", "",
-        "Use the smallest relevant set of installed team-engineering-skills skills below.",
-        "Read the selected SKILL.md fully and announce the skill and reason before acting.",
-        "This table guides the current client; it does not launch or switch AI providers.",
-        "If a skill is unavailable, state that clearly and use a safe general fallback.",
-        "Never claim a missing skill ran. Match task intent, not only exact keywords.", "",
-    ]
-    for skill in registry["skills"]:
-        lines.append("- " + skill["name"] + ": " + "; ".join(skill["routes"]))
-    lines.extend(["", "Registry and version evidence: .team-ai/registry.json and .team-ai/release.json.",
-                  "Feedback is manual and sanitized via GitHub Issues; never upload prompts or code automatically.", ""])
-    agents = "\n".join(lines).encode("utf-8")
+    payload = snapshot_payload(plugin, registry)
+    evidence = release_evidence(registry, payload)
+    agents = render_agents(registry)
     if dry_run:
         print("Validated release " + registry["version"] + "; would create AGENTS.md, CLAUDE.md and .team-ai. No writes.")
         return
     # Exclusive creation refuses files introduced after preflight. There is no
     # overwrite/force path. On I/O failure retain partial outputs for inspection;
     # never recursively delete a directory that another process may have changed.
-    snapshot = project / ".team-ai"
-    snapshot.mkdir(mode=0o700)
-    (snapshot / "standards").mkdir(mode=0o700)
-    for name, data in payload.items():
-        with (snapshot / name).open("xb") as stream:
-            stream.write(data)
-    with (snapshot / "release.json").open("x", encoding="utf-8") as stream:
-        json.dump(evidence, stream, indent=2, sort_keys=True)
-        stream.write("\n")
-    with (project / "AGENTS.md").open("xb") as stream:
-        stream.write(agents)
-    with (project / "CLAUDE.md").open("x", encoding="utf-8") as stream:
-        stream.write("# Team AI adapter\n\n@AGENTS.md\n")
+    write_snapshot(project, payload, evidence, agents)
     print("Created advisory project snapshot for " + registry["version"] + ". Review and commit it; restart your AI client session.")
 
 

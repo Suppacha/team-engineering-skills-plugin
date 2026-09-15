@@ -1,0 +1,7 @@
+{
+  "requirements": [{"id": "REQ-001", "references": []}],
+  "use_cases": [{"id": "UC-001", "references": ["REQ-001"]}],
+  "screens": [{"id": "UI-001", "references": ["REQ-001", "UC-001"]}],
+  "scenarios": [{"id": "TS-001", "references": ["REQ-001", "UI-001"]}],
+  "test_cases": [{"id": "TC-001", "references": ["TS-001"]}]
+}

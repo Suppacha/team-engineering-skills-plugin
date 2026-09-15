@@ -72,6 +72,33 @@ python3 /path/to/release/plugins/team-engineering-skills/scripts/bootstrap-proje
 อย่าลบ instruction เดิมเพื่อให้คำสั่งผ่าน ไม่มี `--force`
 หากเกิด I/O error อาจเหลือไฟล์ใหม่บางส่วน ให้ตรวจเองก่อนดำเนินการต่อ
 
+บน Windows ใช้ Python โดยไม่ต้องใช้ Bash และใส่ quote รอบ path ที่มีช่องว่าง:
+
+```powershell
+py -3 "C:\path with spaces\release\plugins\team-engineering-skills\scripts\bootstrap-project.py" `
+  --release "C:\path with spaces\release" --project "C:\work\project" --dry-run
+```
+
+## 2.1 ตรวจ traceability และ preview metadata แบบ offline
+
+เครื่องมือทั้งสองอ่าน JSON ขนาดจำกัด ไม่เขียน event ไม่ติดต่อ network และไม่ส่งข้อมูล:
+
+```sh
+python3 /path/to/release/plugins/team-engineering-skills/scripts/team_workflows.py \
+  validate-traceability --input /path/to/traceability.json
+python3 /path/to/release/plugins/team-engineering-skills/scripts/team_workflows.py \
+  preview-metadata --input /path/to/metadata.json
+```
+
+Schema และข้อมูลสมมติอยู่ใน `plugins/team-engineering-skills/schemas/` และ
+`plugins/team-engineering-skills/examples/`. ผล traceability ตรวจเฉพาะ ID/reference,
+รายงาน missing link กับ requirement ที่ยังไม่ถูก test แยกกัน และไม่รับรองว่า business
+requirement สมบูรณ์ Requirement ที่ไม่มี UI ทำได้หาก trace ไป test ได้
+
+Metadata รับเฉพาะ field ที่กำหนด, project UUID สุ่ม, version identifier แบบสั้น และคู่
+category/skill ที่ตรงกัน ผลลัพธ์เขียน `PREVIEW ONLY`; retention ยัง `undecided` และไม่มี
+คำสั่ง persist/send. บน Windows เปลี่ยน `python3` เป็น `py -3` และ quote path ทุกจุด
+
 ## 3. Pilot ก่อน rollout
 
 ใช้ข้อมูลสมมติและ prompt ใน [SMOKE_TESTS.md](SMOKE_TESTS.md) กับทั้งสอง client
@@ -120,6 +147,30 @@ claude plugin update team-engineering-skills
 rollback โดยกลับไปใช้ release ที่อนุมัติรุ่นก่อนและ revert commit ของ snapshot ผ่าน review
 Uninstall plugin ไม่ลบ `AGENTS.md`, `CLAUDE.md` หรือ `.team-ai/`
 
+สำหรับ project ที่ bootstrap ด้วย contract V2 ให้สร้าง proposal ใน directory ใหม่ก่อน:
+
+```sh
+python3 /path/to/release/plugins/team-engineering-skills/scripts/project-update.py \
+  --release /path/to/release --project /path/to/existing-project \
+  --output /path/to/new-proposal --dry-run
+python3 /path/to/release/plugins/team-engineering-skills/scripts/project-update.py \
+  --release /path/to/release --project /path/to/existing-project \
+  --output /path/to/new-proposal
+```
+
+Windows:
+
+```powershell
+py -3 "C:\release\plugins\team-engineering-skills\scripts\project-update.py" `
+  --release "C:\release" --project "C:\work\existing project" `
+  --output "C:\work\team-ai proposal" --dry-run
+```
+
+เครื่องมือ validate release และ snapshot/hash เดิม แล้วสร้าง AGENTS.md, CLAUDE.md,
+`.team-ai`, diff และคำแนะนำ migration ใน output ใหม่เท่านั้น ไม่แก้ project, ไม่รัน Git,
+ไม่สร้าง PR และไม่ merge หาก instruction เดิมต่างจาก bootstrap baseline จะเขียน conflict
+ให้คน merge เอง ห้ามใช้ output ที่อยู่ซ้อนกับ release/project หรือ symlink
+
 ## ขอบเขตที่ต้องเข้าใจ
 
 AGENTS/CLAUDE/SKILL เป็นคำแนะนำ ไม่ใช่ security boundary
@@ -128,6 +179,8 @@ AGENTS/CLAUDE/SKILL เป็นคำแนะนำ ไม่ใช่ securit
 CI ตรวจ tests, metadata และ hash ที่กำหนด ไม่ได้บังคับ AI policy ทุกข้อความ
 CODEOWNERS ไม่ได้เปิด branch protection ให้เอง และยังไม่มีการตั้งค่า required reviews/rulesets จาก package นี้
 workflow release ต้องสั่งเองและสร้าง ZIP artifact เท่านั้น ไม่ auto-publish ทุก commit
+CI matrix สำหรับ Ubuntu/macOS/Windows และ live pilot ทั้งสอง clients ยังเป็น **unverified**
+จนกว่าจะเห็นผล run จริง; local unit tests ไม่ใช่หลักฐานแทน
 
 อ่านรายละเอียด [GOVERNANCE.md](GOVERNANCE.md).
 อ้างอิงคำสั่ง: [OpenAI](https://developers.openai.com/plugins/build/plugins),

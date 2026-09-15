@@ -32,6 +32,30 @@ Registry hash algorithm: SHA-256 over each sorted skill-relative UTF-8 filename,
 
 Bootstrap should run while no other process is modifying the project directory. Exclusive file creation prevents overwrite, but this is not a hardened boundary against a hostile local process swapping directories concurrently. I/O failure can leave newly created partial files; inspect them manually, do not rerun with a force flag (none exists).
 
+## Offline integrity and migration boundaries
+
+`scripts/team_workflows.py` validates bounded synthetic/project-authorized JSON
+locally. Traceability results describe explicit linkage only; uncovered requirements
+remain visible and a requirement is not forced to have a UI. The validator does not
+infer business rules or certify semantic completeness.
+
+Metadata is an allowlisted preview with `schema_version` integer `1`, a random UUID,
+bounded version identifiers, and an exact task-category/skill mapping. Extra fields,
+free-text notes, account identifiers and destinations are rejected. Retention remains
+undecided. The package has no metadata persistence, network client or send action;
+any future collection design requires a separate policy and review.
+
+`scripts/project-update.py` accepts a validated trusted release and a consistent V2
+project snapshot, then writes a separate proposal directory with managed files, a
+human-readable diff and manual migration instructions. It does not mutate the source
+project, run Git, create a PR or merge. Project-specific AGENTS/CLAUDE changes are
+reported as manual-merge conflicts. Symlinks, overlapping paths, existing outputs,
+snapshot drift and unsupported contracts are refused before proposal creation.
+
+Portable tests run through `python scripts/verify-portable.py` (or `py -3` on
+Windows). CI declares Ubuntu, macOS and Windows jobs, but those jobs and live
+Codex/Claude pilot behavior remain unverified until their actual results are observed.
+
 The ZIP builder uses an explicit distribution allowlist and excludes common secret filenames and internal caches. This is not content scanning: a secret embedded in a normal source/doc file still requires human review or a separately configured scanner. Never put secrets in this public repository.
 
 Build from a clean, reviewed checkout or extracted approved release. The allowlist
