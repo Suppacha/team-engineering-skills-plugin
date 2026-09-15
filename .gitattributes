@@ -1,0 +1,5 @@
+# Registry hashes cover raw bytes, so Git checkouts must preserve LF for text.
+* text=auto eol=lf
+
+# The test-design workbook is a binary payload and must never be newline-filtered.
+*.xlsx -text

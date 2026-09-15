@@ -136,6 +136,11 @@ def unified(old_text, new_text, name):
     ))
 
 
+def normalize_newlines(text):
+    """Compare managed instructions independent of checkout newline style."""
+    return text.replace("\r\n", "\n").replace("\r", "\n")
+
+
 def proposal_diff(project, payload, evidence, agents):
     pieces = [
         unified((project / "AGENTS.md").read_text(encoding="utf-8"), agents, "AGENTS.md"),
@@ -170,9 +175,9 @@ def create_proposal(release, project, output, dry_run=False):
     agents = render_agents(registry)
     clean_prior_agents = render_agents(prior)
     conflicts = []
-    if current_agents != clean_prior_agents:
+    if normalize_newlines(current_agents) != normalize_newlines(clean_prior_agents):
         conflicts.append(unified(clean_prior_agents, current_agents, "AGENTS.md custom instructions"))
-    if current_claude != CLAUDE_ADAPTER:
+    if normalize_newlines(current_claude) != normalize_newlines(CLAUDE_ADAPTER):
         conflicts.append(unified(CLAUDE_ADAPTER, current_claude, "CLAUDE.md custom instructions"))
     diff_text = proposal_diff(project, payload, evidence, agents)
     if dry_run:

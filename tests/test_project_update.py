@@ -165,6 +165,20 @@ class ProjectUpdateTests(unittest.TestCase):
         self.assertIn("Project-specific approval", conflicts)
         self.assertIn("manual", conflicts.casefold())
 
+    def test_crlf_only_baseline_does_not_report_a_custom_instruction_conflict(self):
+        for name in ("AGENTS.md", "CLAUDE.md"):
+            path = self.project / name
+            path.write_bytes(path.read_bytes().replace(b"\n", b"\r\n"))
+        before = self.project_bytes()
+
+        result = self.run_cli()
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(self.project_bytes(), before)
+        self.assertFalse((self.output / "CONFLICTS.md").exists())
+        migration = (self.output / "MIGRATION.md").read_text(encoding="utf-8")
+        self.assertIn("Custom instruction conflicts detected: 0", migration)
+
     def test_snapshot_drift_and_tampered_release_are_refused_without_output(self):
         (self.project / ".team-ai/standards/security.md").write_text("drift")
         result = self.run_cli()
