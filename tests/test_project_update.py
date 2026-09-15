@@ -1,13 +1,17 @@
 """V2.1 migration proposals against a frozen synthetic V2.0 bootstrap contract."""
 
 import hashlib
+import importlib.util
 import json
+import os
 from pathlib import Path
 import shutil
+import stat
 import subprocess
 import sys
 import tempfile
 import unittest
+from unittest import mock
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -31,6 +35,18 @@ V2_REGISTRY = {
         }
     ],
 }
+
+
+def load_update_module():
+    scripts = str(CLI.parent)
+    sys.path.insert(0, scripts)
+    try:
+        spec = importlib.util.spec_from_file_location("project_update_test", CLI)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        return module
+    finally:
+        sys.path.remove(scripts)
 
 
 def baseline_agents(registry):
@@ -190,6 +206,47 @@ class ProjectUpdateTests(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("exists", result.stderr.casefold())
         self.assertEqual(sentinel.read_text(), "keep")
+
+    def test_new_output_canonicalizes_its_existing_parent(self):
+        module = load_update_module()
+        container = self.base / "container"
+        container.mkdir()
+        lexical = container / ".." / "canonical-proposal"
+        self.assertEqual(
+            module.safe_new_directory(lexical),
+            self.base / "canonical-proposal",
+        )
+
+    def test_reparse_point_attribute_on_output_ancestor_is_refused_portably(self):
+        module = load_update_module()
+        reparse_flag = getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0x400)
+        real_lstat = os.lstat
+
+        def simulated_lstat(path):
+            result = real_lstat(path)
+            if Path(path) != self.base:
+                return result
+            return mock.Mock(st_mode=result.st_mode, st_file_attributes=reparse_flag)
+
+        with mock.patch("os.lstat", side_effect=simulated_lstat):
+            with self.assertRaisesRegex(ValueError, "reparse|junction"):
+                module.safe_new_directory(self.output)
+
+    @unittest.skipUnless(sys.platform == "win32", "requires a live Windows NTFS junction")
+    def test_windows_junction_alias_into_project_is_refused_without_writes(self):
+        alias = self.base / "project-junction"
+        created = subprocess.run(
+            ["cmd", "/c", "mklink", "/J", str(alias), str(self.project)],
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(created.returncode, 0, created.stdout + created.stderr)
+        self.addCleanup(lambda: alias.rmdir() if alias.exists() else None)
+        actual_output = self.project / "proposal-through-junction"
+        result = self.run_cli(ROOT, alias / actual_output.name)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("reparse", result.stderr.casefold())
+        self.assertFalse(actual_output.exists())
 
     def test_inconsistent_and_unsupported_prior_contracts_are_refused(self):
         evidence_path = self.project / ".team-ai/release.json"

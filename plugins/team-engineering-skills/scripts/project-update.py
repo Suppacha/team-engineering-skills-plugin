@@ -4,8 +4,10 @@
 import argparse
 import difflib
 import json
+import os
 from pathlib import Path
 import re
+import stat
 import sys
 
 
@@ -21,10 +23,16 @@ from project_snapshot import (
 
 
 MAX_MANAGED_FILE_BYTES = 2 * 1024 * 1024
+WINDOWS_REPARSE_POINT = getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0x400)
 
 
 def paths_overlap(first, second):
     return first == second or first.is_relative_to(second) or second.is_relative_to(first)
+
+
+def is_reparse_point(path):
+    attributes = getattr(os.lstat(path), "st_file_attributes", 0)
+    return bool(attributes & WINDOWS_REPARSE_POINT)
 
 
 def safe_new_directory(value):
@@ -35,9 +43,11 @@ def safe_new_directory(value):
     for component in (parent, *parent.parents):
         if component.is_symlink():
             raise ValueError("refusing symlinked proposal output ancestor")
+        if is_reparse_point(component):
+            raise ValueError("refusing Windows reparse point or junction in proposal output ancestors")
     if not parent.is_dir():
         raise ValueError("proposal output parent directory must already exist")
-    return path
+    return parent.resolve(strict=True) / path.name
 
 
 def read_managed(path):
