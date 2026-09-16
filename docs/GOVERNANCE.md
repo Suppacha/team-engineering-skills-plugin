@@ -16,7 +16,7 @@ Ownership here means stewardship, not a claim of copyright over third-party skil
 
 Use semantic versions for the framework: major for incompatible policy/bootstrap contracts, minor for compatible capabilities, patch for compatible fixes. Individual skill `version` values are team-packaged versions, not upstream versions: V2 retains the V1 payloads at `1.0.0`. Update an affected skill's version and `tree_sha256` when its content changes. Keep immutable upstream revisions and licenses in `config/skills-lock.json`.
 
-Registry hash algorithm: SHA-256 over each sorted skill-relative UTF-8 filename, a NUL byte, and the binary SHA-256 of that file's bytes. Policy hashes are plain file SHA-256. Use `scripts/framework.py`'s `tree_digest` function when updating metadata. Hash changes must be reviewed, never blindly refreshed to silence a failure. Hashes detect content drift, not identity or trust: obtain releases from a trusted, reviewed source.
+Registry hash algorithm: order files by the tuple of skill-relative path components using case-sensitive string comparison, independent of the host OS (not native Windows Path ordering and not a flat slash-joined string sort). Hash each relative POSIX-style UTF-8 filename, a NUL byte, and the binary SHA-256 of that file's bytes into a SHA-256 accumulator. This preserves the original POSIX-generated registry values on Windows without changing payload bytes or accepted hashes. Policy hashes are plain file SHA-256. Use `scripts/framework.py`'s `tree_digest` function when updating metadata. Hash changes must be reviewed, never blindly refreshed to silence a failure. Hashes detect content drift, not identity or trust: obtain releases from a trusted, reviewed source.
 
 ## What is and is not enforced
 

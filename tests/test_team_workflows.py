@@ -49,7 +49,7 @@ def load_module(relative_path, name):
 
 def tree_digest(root):
     result = hashlib.sha256()
-    for path in sorted(root.rglob("*")):
+    for path in sorted(root.rglob("*"), key=lambda p: p.relative_to(root).parts):
         if path.is_file():
             result.update(path.relative_to(root).as_posix().encode("utf-8"))
             result.update(b"\0")

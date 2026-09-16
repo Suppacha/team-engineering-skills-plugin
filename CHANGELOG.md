@@ -4,6 +4,7 @@ All notable changes to this marketplace are documented here.
 
 ## 2.1.0 - 2026-09-15
 
+- Fixes Windows skill-hash validation by using platform-independent, case-sensitive path-component ordering; existing registry hashes and skill payloads remain unchanged.
 - Adds repository-owned `requirement-analysis`, `ui-design-specification`, and `test-case-design` skills with implicit invocation for Codex and Claude Code.
 - Adds generic Markdown templates, synthetic appointment-booking trace examples, ordered Test Scenario/Test Case CSV schemas, and a new blank two-sheet XLSX template.
 - Preserves not-run execution evidence and treats `Upload jira` as data rather than authorization for an external side effect.
