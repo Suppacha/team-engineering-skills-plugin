@@ -675,6 +675,10 @@ def test_final_markdown_rejects_missing_local_targets_but_allows_fragments_and_u
 
 
 def test_final_optional_validator_skip_and_rejection():
+    # This exercises the POSIX shell wrapper with /usr/bin tools and shell shims,
+    # not the portable Python gate (which runs on all three CI platforms).
+    if os.name == "nt":
+        raise unittest.SkipTest("POSIX shell-wrapper fixture; covered on macOS and Linux")
     for mode in ("missing-validator", "missing-yaml", "reject"):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary).resolve()

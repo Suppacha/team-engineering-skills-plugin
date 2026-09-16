@@ -168,7 +168,12 @@ class ProjectUpdateTests(unittest.TestCase):
     def test_crlf_only_baseline_does_not_report_a_custom_instruction_conflict(self):
         for name in ("AGENTS.md", "CLAUDE.md"):
             path = self.project / name
-            path.write_bytes(path.read_bytes().replace(b"\n", b"\r\n"))
+            # write_text already emits CRLF on Windows: normalize before conversion
+            # so the fixture never accidentally creates CR-CR-LF blank lines.
+            normalized = path.read_bytes().replace(b"\r\n", b"\n")
+            path.write_bytes(normalized.replace(b"\n", b"\r\n"))
+            self.assertNotIn(b"\r\r\n", path.read_bytes())
+            self.assertEqual(path.read_bytes().replace(b"\r\n", b"\n"), normalized)
         before = self.project_bytes()
 
         result = self.run_cli()
