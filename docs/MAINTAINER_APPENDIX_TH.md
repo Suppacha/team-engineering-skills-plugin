@@ -5,7 +5,7 @@
 คำสั่ง CLI เดิมขึ้นกับรุ่นของ client; ถ้าไม่รองรับให้ใช้แนวทางในคู่มือใหม่ อย่าเดาคำสั่งทดแทน
 ข้อความสถานะ unverified ด้านล่างเป็นบันทึกเดิม ไม่ใช่ผล CI ล่าสุด; ตรวจ PR ที่ commit ที่จะส่งจริง
 
-Owner: Suppacha · Version: 2.1.0 · Repository นี้เป็น **public**:
+Owner: Suppacha · Candidate version: 2.2.0 · **NOT ACTIVATED** · Repository นี้เป็น **public**:
 [Suppacha/team-engineering-skills-plugin](https://github.com/Suppacha/team-engineering-skills-plugin)
 
 ทีมใช้มาตรฐานและ 15 skills ชุดเดียวกัน แต่ละคนเลือก Codex หรือ Claude Code
@@ -113,7 +113,7 @@ category/skill ที่ตรงกัน ผลลัพธ์เขียน 
 
 ### Manual discovery สำหรับ workflow ใหม่
 
-สถานะ ณ รุ่น 2.1.0: scenario ด้านล่างเป็นข้อมูลสมมติและ **ยังไม่ผ่านการยืนยันกับ live client**.
+สถานะ candidate 2.2.0: scenario ด้านล่างเป็นข้อมูลสมมติและ **ยังไม่ผ่านการยืนยันกับ live client**.
 ให้รันแยกใน Codex และ Claude Code หลังติดตั้ง แล้วบันทึก client/version และผลที่สังเกตจริง
 
 1. `วิเคราะห์ requirement สำหรับระบบนัดหมายสมมติ แยกข้อมูลยืนยัน สมมติฐาน business rules และ acceptance criteria`

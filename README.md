@@ -1,7 +1,7 @@
 # Team AI Operating Framework — V2
 
 `team-engineering-skills-marketplace` distributes the `team-engineering-skills`
-plugin version `2.1.0` for Codex/ChatGPT plugin-capable clients and Claude Code.
+plugin candidate version `2.2.0` for Codex/ChatGPT plugin-capable clients and Claude Code.
 It combines 15 licensed skills with shared policies, task routes, project bootstrap
 and a reviewed change process. Individual developers use their own approved accounts.
 
@@ -30,7 +30,7 @@ standard-library only. Build and extract a trusted release:
 
 ```sh
 ./scripts/build-release.sh
-unzip dist/team-engineering-skills-marketplace-2.1.0.zip -d /path/to/team-engineering-skills-marketplace-2.1.0
+unzip dist/team-engineering-skills-marketplace-2.2.0.zip -d /path/to/team-engineering-skills-marketplace-2.2.0
 ```
 
 The extracted directory is the marketplace root, containing both
@@ -43,7 +43,7 @@ The extracted directory is the marketplace root, containing both
 For Codex clients with the plugin CLI:
 
 ```sh
-codex plugin marketplace add /path/to/team-engineering-skills-marketplace-2.1.0
+codex plugin marketplace add /path/to/team-engineering-skills-marketplace-2.2.0
 codex plugin add team-engineering-skills@team-engineering-skills-marketplace
 ```
 

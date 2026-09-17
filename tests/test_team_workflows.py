@@ -183,7 +183,7 @@ class TeamWorkflowPackageTests(unittest.TestCase):
             self.assertFalse(sheet_rows[1:], "blank workbook must contain headers only")
             self.assertTrue(evidence_columns.intersection(sheet_rows[0]))
 
-    def test_lock_registry_payload_and_manifests_agree_on_v2_1(self):
+    def test_lock_registry_payload_and_candidate_surfaces_agree_on_v2_2(self):
         lock = json.loads(LOCK.read_text(encoding="utf-8"))["skills"]
         registry = json.loads((PLUGIN / "registry.json").read_text(encoding="utf-8"))
         lock_names = {entry["name"] for entry in lock}
@@ -199,13 +199,21 @@ class TeamWorkflowPackageTests(unittest.TestCase):
                 self.assertEqual(entry["source"], "Repository-owned canonical skill")
         for entry in registry["skills"]:
             self.assertEqual(entry["tree_sha256"], tree_digest(SKILLS / entry["name"]))
-        versions = {
+        claude_catalog = json.loads(
+            (ROOT / ".claude-plugin/marketplace.json").read_text(encoding="utf-8")
+        )
+        candidate_versions = {
             (PLUGIN / "VERSION").read_text(encoding="utf-8").strip(),
             registry["version"],
             json.loads((PLUGIN / ".codex-plugin/plugin.json").read_text())["version"],
             json.loads((PLUGIN / ".claude-plugin/plugin.json").read_text())["version"],
+            next(
+                entry["version"]
+                for entry in claude_catalog["plugins"]
+                if entry["name"] == "team-engineering-skills"
+            ),
         }
-        self.assertEqual(versions, {"2.1.0"})
+        self.assertEqual(candidate_versions, {"2.2.0"})
 
     def test_sync_keeps_repository_owned_skills_without_global_copies(self):
         module = load_module("scripts/sync-skills.py", "sync_skills_v21_test")

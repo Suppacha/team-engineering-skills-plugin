@@ -194,7 +194,7 @@ class GitHubEvidenceTests(unittest.TestCase):
         self.fixture.package(BASE)
         evidence = self.client.collect_candidate(SHA, BASE)
         self.assertTrue(evidence["candidate"]["valid_package"])
-        self.assertEqual(evidence["candidate"]["version"], "2.1.0")
+        self.assertEqual(evidence["candidate"]["version"], "2.2.0")
         self.assertEqual(len(evidence["candidate"]["skills"]), 15)
         self.assertEqual(len(evidence["ci"]["jobs"]), 3)
         self.assertTrue(evidence["candidate"]["on_main"])

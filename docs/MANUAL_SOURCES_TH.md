@@ -4,7 +4,7 @@
 
 ## ขอบเขตและหลักฐานภายใน
 
-- ตรวจ repository ที่ commit `5fe5e20`: plugin VERSION และสอง manifests เป็น 2.1.0; registry มี 15 Skills แต่ละรายการเป็น 1.0.0
+- Candidate 2.2.0 ปรับ VERSION, สอง manifests, registry และ Claude catalog ให้ตรงกัน; registry ยังมี 15 Skills แต่ละรายการเป็น 1.0.0 และยัง **NOT ACTIVATED**
 - ไม่แก้ Skill, registry, permission หรือพฤติกรรม runtime ในงานปรับคู่มือนี้
 - ยังไม่ได้ทดสอบติดตั้ง/อัปเดตแบบ interactive ในทั้งสี่ Tool และไม่ได้พิสูจน์การอ่านจบภายในห้านาทีกับผู้ใช้จริง
 - ไม่มีหลักฐานการ import ชุดทีมเข้า ChatGPT Workspace, ไม่มี Claude shared link และไม่มี ZIP ราย Skill สำหรับ Claude ใน deliverable นี้ จึงระบุเงื่อนไขก่อนทำขั้นตอนแทนการรับรองว่าเปิดใช้แล้ว
@@ -28,7 +28,7 @@
 
 ## อย่าปะปน version สามประเภท
 
-ตัวอย่างสมมติเมื่อทีมประกาศ update: **ปลั๊กอิน 2.1.0 → 2.2.0** อาจรวม **test-case-design 1.0.0 → 1.1.0**; ไม่ได้แปลว่า Skill นั้นมี version 2.1/2.2 จริง และ 2.2.0 ยังไม่ใช่ release ที่ประกาศในงานนี้
+Candidate นี้เปลี่ยน **ปลั๊กอิน 2.1.0 → 2.2.0** โดย Skill ทั้ง 15 รายการยังเป็น 1.0.0 และ hash เดิม; ไม่ได้แปลว่า Skill มี version 2.2.0 และยังไม่ใช่ active rollout
 `codex --version` / `claude --version` บอกรุ่น client อีกชุดหนึ่ง
 
 ให้ผู้ดูแลประกาศ plugin version, commit/ref, skill versions ที่เปลี่ยน และช่องทางติดตั้งที่อนุมัติทุกครั้ง เวอร์ชันเท่ากันแต่อยู่คนละ commit อาจมีเนื้อหาต่างกัน โดยเฉพาะ pilot; ต้องเทียบหลักฐานเพิ่ม

@@ -131,16 +131,20 @@ class ProjectUpdateTests(unittest.TestCase):
 
     def test_generates_new_reviewable_proposal_without_mutating_project(self):
         before = self.project_bytes()
+        previous_contract = json.loads(
+            (self.project / ".team-ai/registry.json").read_text(encoding="utf-8")
+        )
+        self.assertEqual(previous_contract["version"], "2.0.0")
         result = self.run_cli()
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(self.project_bytes(), before)
         self.assertTrue((self.output / "AGENTS.md").is_file())
         self.assertTrue((self.output / "CLAUDE.md").is_file())
         proposed = json.loads((self.output / ".team-ai/release.json").read_text())
-        self.assertEqual(proposed["version"], "2.1.0")
+        self.assertEqual(proposed["version"], "2.2.0")
         migration = (self.output / "MIGRATION.md").read_text(encoding="utf-8")
         self.assertIn("2.0.0", migration)
-        self.assertIn("2.1.0", migration)
+        self.assertIn("2.2.0", migration)
         self.assertIn("manual", migration.casefold())
         self.assertIn("diff", migration.casefold())
         self.assertTrue((self.output / "project-to-proposal.diff").is_file())

@@ -2,6 +2,12 @@
 
 All notable changes to this marketplace are documented here.
 
+## 2.2.0 - 2026-09-17 (candidate; not activated)
+
+- Adds fail-closed candidate, CI, approval, and stable-channel promotion gates with least-privilege release writes.
+- Adds native auto-update Admin and pilot runbooks while leaving every activation and pilot result explicitly not run.
+- Preserves all 15 skill payload hashes and skill versions; this candidate changes repository release controls and documentation only.
+
 ## 2.1.0 - 2026-09-15
 
 - Fixes Windows skill-hash validation by using platform-independent, case-sensitive path-component ordering; existing registry hashes and skill payloads remain unchanged.
