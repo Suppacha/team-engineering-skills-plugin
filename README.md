@@ -6,7 +6,7 @@ It combines 15 licensed skills with shared policies, task routes, project bootst
 and a reviewed change process. Individual developers use their own approved accounts.
 
 เริ่มใช้งานภาษาไทย: [Quick User Manual — เลือกอ่านเฉพาะ Tool ที่ใช้](docs/QUICKSTART_TH.md).
-ผู้ดูแล: [Setup / Migration](docs/MAINTAINER_APPENDIX_TH.md) · [หลักฐานและข้อจำกัดคู่มือ](docs/MANUAL_SOURCES_TH.md).
+ผู้ดูแล: [Native auto-update / Migration](docs/AUTO_UPDATE_ADMIN_TH.md) · [แบบบันทึก pilot](docs/AUTO_UPDATE_PILOT_TH.md) · [หลักฐานและข้อจำกัดคู่มือ](docs/MANUAL_SOURCES_TH.md).
 Public source: [Suppacha/team-engineering-skills-plugin](https://github.com/Suppacha/team-engineering-skills-plugin).
 Do not commit company secrets or private project information here.
 
@@ -47,10 +47,10 @@ codex plugin marketplace add /path/to/team-engineering-skills-marketplace-2.1.0
 codex plugin add team-engineering-skills@team-engineering-skills-marketplace
 ```
 
-For the public GitHub marketplace after publication:
+For the public GitHub marketplace only after Admin activation and a passing pilot:
 
 ```sh
-codex plugin marketplace add Suppacha/team-engineering-skills-plugin --ref main
+codex plugin marketplace add Suppacha/team-engineering-skills-plugin --ref stable
 codex plugin add team-engineering-skills@team-engineering-skills-marketplace
 ```
 
@@ -78,7 +78,7 @@ project snapshots or local release files.
 ### Install
 
 ```sh
-claude plugin marketplace add Suppacha/team-engineering-skills-plugin
+claude plugin marketplace add Suppacha/team-engineering-skills-plugin@stable --scope user
 claude plugin install team-engineering-skills@team-engineering-skills-marketplace
 ```
 

@@ -57,4 +57,6 @@
 - [ ] Pilot ติดตั้ง/update/verify กับบัญชีจริงทั้งสี่ Tool และ macOS/Windows ที่เกี่ยวข้อง
 - [ ] ให้สมาชิกใหม่ลอง Quick Start + Tool ของตน และจับเวลา/ถามห้าคำถามตามโจทย์
 
+แบบบันทึกผล native client ที่ยังว่างอยู่: [Auto-update pilot — ทั้งสี่คู่เริ่ม NOT RUN](AUTO_UPDATE_PILOT_TH.md). ขั้นตอนตั้งค่าและย้าย source: [คู่มือ Admin](AUTO_UPDATE_ADMIN_TH.md).
+
 ข้อจำกัด CLI: ใน environment ของรอบปรับเอกสารนี้ไม่พบ Codex executable ที่ path ที่ลอง จึงไม่อ้างว่ารันตัวอย่างติดตั้ง Codex สำเร็จ อ้างอิงคำสั่งจากเอกสารทางการเท่านั้น
