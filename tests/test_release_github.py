@@ -91,6 +91,27 @@ class Fixture:
         self.routes[PREFIX + f"/git/trees/{sha}?recursive=1"] = {"sha": sha, "truncated": False, "tree": entries}
 
 
+def apache_license_fixture(files, license_path, payload=None):
+    """Keep registry/notices consistent so only license evidence is under test."""
+    plugin = "plugins/team-engineering-skills/"
+    lock = json.loads(files["config/skills-lock.json"])
+    next(s for s in lock["skills"] if s["name"] == "mcp-builder")["notice"]["license_file"] = license_path
+    files["config/skills-lock.json"] = json.dumps(lock).encode()
+    notices = plugin + "THIRD_PARTY_NOTICES.md"
+    files[notices] = files[notices].replace(b"skills/mcp-builder/LICENSE.txt", ("skills/mcp-builder/" + license_path).encode())
+    if payload is not None:
+        skill_prefix = plugin + "skills/mcp-builder/"
+        files[skill_prefix + license_path] = payload
+        digest = hashlib.sha256()
+        for name in sorted((n for n in files if n.startswith(skill_prefix)), key=lambda n: tuple(n[len(skill_prefix):].split("/"))):
+            digest.update(name[len(skill_prefix):].encode())
+            digest.update(b"\0")
+            digest.update(hashlib.sha256(files[name]).digest())
+        registry = json.loads(files[plugin + "registry.json"])
+        next(s for s in registry["skills"] if s["name"] == "mcp-builder")["tree_sha256"] = digest.hexdigest()
+        files[plugin + "registry.json"] = json.dumps(registry).encode()
+
+
 class GitHubEvidenceTests(unittest.TestCase):
     def setUp(self):
         self.assertIsNotNone(GitHubClient, "read-only GitHub evidence collector is not implemented")
@@ -185,6 +206,24 @@ class GitHubEvidenceTests(unittest.TestCase):
                 fixture.package(BASE)
                 with self.assertRaises((ValueError, RuntimeError)):
                     GitHubClient(fixture.request).collect_candidate(SHA, BASE)
+
+    def test_apache_license_file_must_be_present_nonempty_and_skill_local(self):
+        for path, payload in (("MISSING-LICENSE", None), ("EMPTY-LICENSE", b""),
+                              ("BLANK-LICENSE", b" \n\t"), ("../supabase/SKILL.md", None),
+                              ("../../standards/security.md", None), ("/LICENSE", None),
+                              ("..\\supabase\\SKILL.md", None), ("C:\\LICENSE", None),
+                              ("LICENSE.txt.", None)):
+            fixture = Fixture()
+            fixture.package(SHA, lambda files: apache_license_fixture(files, path, payload))
+            fixture.package(BASE)
+            with self.subTest(path=path), self.assertRaises((ValueError, RuntimeError)):
+                GitHubClient(fixture.request).collect_candidate(SHA, BASE)
+
+    def test_apache_license_file_can_be_nested_inside_skill(self):
+        payload = (ROOT / "plugins/team-engineering-skills/skills/mcp-builder/LICENSE.txt").read_bytes()
+        self.fixture.package(SHA, lambda files: apache_license_fixture(files, "legal/LICENSE.txt", payload))
+        self.fixture.package(BASE)
+        self.assertTrue(self.client.collect_candidate(SHA, BASE)["candidate"]["valid_package"])
 
     def test_tree_rejects_symlink_submodule_traversal_and_truncation(self):
         for mode, kind, path in (("120000", "blob", "plugins/link"), ("160000", "commit", "plugins/submodule"), ("100644", "blob", "../escape"), ("100644", "blob", "plugins/CON")):

@@ -297,6 +297,14 @@ class GitHubClient:
                 _require(isinstance(entry, dict) and all(isinstance(entry.get(k), str) and entry[k].strip() for k in license_validator.REQUIRED_FIELDS), "incomplete license evidence")
                 license_validator.validate_license_evidence(entry)
                 _require(entry["name"] not in licenses, "duplicate license entry")
+                _require(entry["name"] in {s["name"] for s in registry["skills"]}, "license entry has no packaged skill")
+                if entry["license"] == "Apache-2.0":
+                    relative_license = self._safe_path(entry["notice"]["license_file"])
+                    skill_root = (root / PLUGIN / "skills" / entry["name"]).resolve()
+                    license_path = (skill_root / relative_license).resolve()
+                    _require(license_path.is_relative_to(skill_root) and license_path.is_file(),
+                             "Apache license payload must be a packaged skill-local file")
+                    _require(bool(license_path.read_bytes().strip()), "Apache license payload must not be empty")
                 licenses[entry["name"]] = entry
             _require(set(licenses) == {s["name"] for s in registry["skills"]}, "license allowlist differs from package")
             _require((root / PLUGIN / "THIRD_PARTY_NOTICES.md").read_text() == license_validator.render_notices(entries), "distribution notices differ from license evidence")
