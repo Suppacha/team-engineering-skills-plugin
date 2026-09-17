@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "repository": "Suppacha/team-engineering-skills-plugin",
+  "plugin_name": "team-engineering-skills",
+  "marketplace_name": "team-engineering-skills-marketplace",
+  "source_branch": "main",
+  "channel": "stable",
+  "verify_workflow": ".github/workflows/verify.yml",
+  "environment": "team-plugin-stable",
+  "reviewer_login": "Suppacha",
+  "reviewer_github_id": null
+}
