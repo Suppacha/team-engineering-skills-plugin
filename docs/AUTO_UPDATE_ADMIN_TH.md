@@ -17,7 +17,7 @@
 | Variable | `RELEASE_REVIEWER_ID` | numeric GitHub ID ของ reviewer ที่ policy อนุมัติ |
 | Variable | `RELEASE_ADMIN_EVIDENCE` | JSON ที่ Admin ตรวจ human + live checks ตาม schema ด้านล่าง |
 
-App ใช้ Contents: write, Actions: read และ Environments: read เฉพาะ repository `Suppacha/team-engineering-skills-plugin`; ไม่ให้ Administration:write. ตั้ง required reviewer และปิด environment Admin bypass. Ruleset ของ `stable` ต้องป้องกัน deletion, non-fast-forward และการเขียนที่ไม่ผ่าน dedicated writer. หากสิทธิ์/plan ทำไม่ได้ให้หยุด ไม่ลด gate
+App ใน workflow ปัจจุบันขอ Contents: write, Actions: read และ Environments: read เฉพาะ repository `Suppacha/team-engineering-skills-plugin`; ไม่ให้ Administration:write. แยกจากข้อกำหนด endpoint: [Get rules for a branch](https://docs.github.com/en/rest/repos/rules#get-rules-for-a-branch) ใช้ Metadata: read (และ public repository อ่านได้โดยไม่ยืนยันตัวตน) ส่วน [Get an environment](https://docs.github.com/en/rest/deployments/environments#get-an-environment) ใช้ Actions: read. ดังนั้น Environments: read ที่ workflow ปัจจุบันขอเป็น scope เกินกว่าที่สอง endpoint นี้ระบุและต้องถูก flag เพื่อทบทวน least privilege; เอกสารนี้ไม่อ้างว่าจำเป็นและไม่เปลี่ยน runtime ในรอบเอกสาร ตั้ง required reviewer และปิด environment Admin bypass. Ruleset ของ `stable` ต้องป้องกัน deletion, non-fast-forward และการเขียนที่ไม่ผ่าน dedicated writer. หากสิทธิ์/plan ทำไม่ได้ให้หยุด ไม่ลด gate
 
 `RELEASE_ADMIN_EVIDENCE` ต้องตรงกับ runtime schema จริง:
 
@@ -37,6 +37,18 @@ App ใช้ Contents: write, Actions: read และ Environments: read เฉ
 ```
 
 บล็อกนี้เป็น schema template ไม่ใช่ JSON ที่นำไปใช้ได้จนกว่าจะแทน placeholder ด้วยค่าจริง: ID และทุกสมาชิกของ `ruleset_ids` ต้องเป็น positive integer, `reviewed_at` ต้องเป็น UTC ISO 8601 ที่มี timezone และ `evidence_reference` ต้องเป็น string ไม่ว่าง **ห้ามสร้าง identity สมมติ**. Admin ต้องอ่าน environment ID, reviewer ID, writer App ID และ effective ruleset IDs จาก live settings แล้วเก็บ evidence reference ที่ตรวจย้อนกลับได้และไม่มี secret. ตรวจซ้ำและเปลี่ยน `reviewed_at` เมื่อ environment, reviewer, App permission, ruleset หรือ bypass เปลี่ยน ระบบตรวจ API-visible state ทุก release แต่ human evidence ยังจำเป็นสำหรับสิ่งที่ API มองไม่เห็น
+
+## Bootstrap `stable` ครั้งแรกอย่างปลอดภัย
+
+ทำตามลำดับนี้ ห้ามข้ามไป import source ที่ยังไม่มี:
+
+1. ตั้ง protections และ Admin evidence จาก live settings ให้ครบ รวมการยืนยันว่าไม่มีค่าชื่อซ้ำระดับ repository/organization
+2. เลือก reviewed main SHA แบบเต็มที่อยู่บน `main` และยืนยัน exact three-OS CI ของ SHA เดียวกันว่า Windows, macOS และ Ubuntu ผ่านครบ
+3. รัน first approved promotion ผ่าน `Promote reviewed stable release`; ให้ workflow สร้าง `stable` จาก candidate SHA ที่ตรวจแล้ว **ห้ามสร้าง `stable` ว่างหรือชี้ SHA ที่ยังไม่ผ่าน gate ด้วยมือ**
+4. ตรวจ `stable` ref และ release record ว่าชี้ candidate SHA เดียวกัน พร้อม CI/approval evidence ที่ตรวจย้อนกลับได้
+5. เมื่อ bootstrap สำเร็จแล้วจึง import `stable` เข้า company Workspace และจึง enable Claude stable source สำหรับ pilot
+
+หาก promotion แรกถูกปฏิเสธหรือ record ไม่ครบ ให้หยุดและแก้ gate/หลักฐาน ห้ามสร้าง branch ชั่วคราวเพื่อทำให้ provider import ผ่าน
 
 ## เปิด Codex company Workspace
 

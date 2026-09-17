@@ -55,6 +55,24 @@ class AutoUpdateDocumentationTests(unittest.TestCase):
         self.assertRegex(admin, r"(?i)company Workspace")
         self.assertRegex(admin, r"(?i)human.*live|คน.*live|คน.*สถานะจริง")
 
+    def test_stable_is_bootstrapped_only_by_an_approved_first_promotion(self):
+        admin = self.read("docs/AUTO_UPDATE_ADMIN_TH.md")
+        sequence = (
+            "ตั้ง protections และ Admin evidence",
+            "reviewed main SHA",
+            "exact three-OS CI",
+            "first approved promotion",
+            "ตรวจ `stable` ref และ release record",
+            "จึง import",
+        )
+        positions = [admin.index(step) for step in sequence]
+        self.assertEqual(positions, sorted(positions))
+        self.assertIn("ห้ามสร้าง `stable` ว่าง", admin)
+        self.assertIn("Metadata: read", admin)
+        self.assertIn("Actions: read", admin)
+        self.assertIn("Environments: read", admin)
+        self.assertRegex(admin, r"Environments: read.*เกิน.*endpoint")
+
     def test_migration_is_explicit_and_does_not_destroy_local_state(self):
         admin = self.read("docs/AUTO_UPDATE_ADMIN_TH.md")
         for concept in ("ZIP", "ชื่อซ้ำ", "backup", "project", "uninstall", "disable"):
