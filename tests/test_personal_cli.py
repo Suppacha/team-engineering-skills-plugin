@@ -141,7 +141,9 @@ class CliLifecycleTests(unittest.TestCase):
 
     def test_native_installer_forwards_spaced_arguments_unchanged(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            # PowerShell's PSScriptRoot expands Windows 8.3 TEMP aliases.
+            # Canonicalize fixture-owned paths, not the arguments under test.
+            root = Path(directory).resolve(strict=True)
             scripts = root / "path with spaces"
             scripts.mkdir()
             if os.name == "nt":

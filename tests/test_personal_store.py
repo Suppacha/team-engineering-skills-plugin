@@ -13,6 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 
 from team_updater.release import Candidate
+from team_updater.cli import _absolute_executable
 from team_updater.store import Store, validate_snapshot
 
 
@@ -237,6 +238,9 @@ class GitStagingTests(unittest.TestCase):
 
     def test_stage_exports_verified_raw_blobs_from_fixed_remote_command(self):
         calls = []
+        actual_git = Path(shutil.which("git")).resolve(strict=True)
+        discovered_git = self.base / "git-from-package-manager"
+        discovered_git.symlink_to(actual_git)
 
         def local_transport(command, **kwargs):
             calls.append((list(command), dict(kwargs.get("env", {}))))
@@ -248,14 +252,18 @@ class GitStagingTests(unittest.TestCase):
                 del command[index - 1:index + 1]
             return subprocess.run(command, **kwargs)
 
-        with patch.dict(os.environ, {"GIT_CONFIG_COUNT": "99", "GIT_CONFIG_KEY_0": "filter.bad.clean"}):
+        with patch.dict(os.environ, {"GIT_CONFIG_COUNT": "99", "GIT_CONFIG_KEY_0": "filter.bad.clean"}), \
+                patch.object(shutil, "which", return_value=str(discovered_git)):
             store = Store(self.base / "updater", run=local_transport)
-            staged = store.stage(Candidate("2.2.0", self.sha, {}), Path(shutil.which("git")))
+            # Match the public installer's frozen executable binding, including
+            # package-manager PATH entries that are symlinks on macOS.
+            staged = store.stage(Candidate("2.2.0", self.sha, {}), _absolute_executable("git", "git"))
         self.assertEqual((staged / "plugins/team-engineering-skills/VERSION").read_text(), "2.2.0\n")
         remote_calls = [call for call, _env in calls if "remote" in call]
         self.assertTrue(any("https://github.com/Suppacha/team-engineering-skills-plugin.git" in call
                             for call in remote_calls))
         for _call, environment in calls:
+            self.assertEqual(_call[0], str(actual_git))
             self.assertNotIn("GIT_CONFIG_COUNT", environment)
             self.assertEqual(environment["GIT_CONFIG_GLOBAL"], os.devnull)
 
