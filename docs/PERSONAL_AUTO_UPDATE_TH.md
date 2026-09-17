@@ -10,8 +10,25 @@
 
 ## ติดตั้ง
 
-1. ตรวจ SHA-256 ของ ZIP updater ตามประกาศ release แล้วแตกไฟล์ไป directory ที่ผู้ใช้ OS คนนี้ควบคุม
-2. macOS เปิด `scripts/install-updater.command`; Windows เปิด `scripts/install-updater.ps1` ด้วยสิทธิ์ผู้ใช้ปกติ ไม่ใช้ root, Run as administrator หรือ highest privileges
+1. ตรวจ SHA-256 ของ ZIP updater ตามประกาศ release แล้วแตกไฟล์ไป directory ที่ผู้ใช้ OS คนนี้ควบคุม เปิด Terminal/PowerShell ที่ root ของไฟล์ที่แตก
+2. หา absolute path จาก `PATH` ที่ผู้ใช้คนนี้ตั้งไว้ แล้วส่งให้ installer อย่างชัดเจน; หากหาไม่พบให้ติดตั้ง prerequisite หรือถามผู้ดูแล ห้ามเดา path:
+
+   macOS:
+
+   ```sh
+   CODEX_BIN="$(command -v codex)" && GIT_BIN="$(command -v git)" && \
+     ./scripts/install-updater.command --codex "$CODEX_BIN" --git "$GIT_BIN"
+   ```
+
+   Windows PowerShell:
+
+   ```powershell
+   $codexBin = (Get-Command codex -ErrorAction Stop).Source
+   $gitBin = (Get-Command git -ErrorAction Stop).Source
+   & .\scripts\install-updater.ps1 --codex $codexBin --git $gitBin
+   ```
+
+   ใช้สิทธิ์ผู้ใช้ปกติ ไม่ใช้ root, Run as administrator หรือ highest privileges Wrapper ไม่ค้นหา Codex/Git เองและไม่รองรับการ double-click โดยไม่มี arguments
 3. อ่าน source, plugin และตำแหน่ง scheduler ที่ installer แสดง หากพบ marketplace/plugin ชื่อซ้ำจาก ZIP/local/Git เดิม ให้หยุดและขอ migration จากผู้ดูแล
 4. initial check ต้องสำเร็จก่อน scheduler จึงเปิด: macOS ใช้ user LaunchAgent; Windows ใช้ Task Scheduler แบบ `InteractiveToken`/least privilege
 5. refresh/restart Codex Desktop และเปิดแชตใหม่เพื่อพิสูจน์ loaded evidence
@@ -20,7 +37,7 @@
 
 ## ใช้งานและตรวจสถานะ
 
-รัน entry point ที่ติดตั้งไว้ด้วยคำสั่ง `status`, `check`, `pause`, `resume` หรือ `uninstall-updater` ตาม path ที่ installer แสดง `check` ใช้ gate เดียวกับ scheduler ไม่ bypass approval
+เมื่อสำเร็จ installer พิมพ์ `management-command=... status ...` ที่มี Python, installed immutable entry point และ state directory ครบ ให้เก็บคำสั่งนี้ไว้เฉพาะเครื่อง แล้วเปลี่ยน `status` ท้ายคำสั่งเป็น `check`, `pause`, `resume` หรือ `uninstall-updater` ตามงาน `check` ใช้ gate เดียวกับ scheduler ไม่ bypass approval
 
 - `status`: อ่าน enabled/paused, installed version/SHA, last check/result, available verified version และ reload-required
 - `pause`: ปิดเฉพาะ scheduler ของทีม

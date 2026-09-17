@@ -13,6 +13,9 @@ sys.path.insert(0, str(ROOT / "scripts"))
 from team_updater.cli import runtime_files
 
 
+INSTALLERS = ("scripts/install-updater.command", "scripts/install-updater.ps1")
+
+
 class UpdaterDistributionTests(unittest.TestCase):
     def build(self, output: Path) -> subprocess.CompletedProcess:
         return subprocess.run(
@@ -31,7 +34,7 @@ class UpdaterDistributionTests(unittest.TestCase):
             with zipfile.ZipFile(output) as archive:
                 names = archive.namelist()
 
-        self.assertEqual(names, sorted(runtime_files()))
+        self.assertEqual(names, sorted((*runtime_files(), *INSTALLERS)))
         self.assertIn("scripts/team-update.py", names)
         self.assertFalse(any(".superpowers/" in name or name.endswith(".pem") for name in names))
 
@@ -65,6 +68,21 @@ class UpdaterDistributionTests(unittest.TestCase):
                 check=False,
             )
             self.assertEqual(probe.returncode, 0, probe.stderr)
+
+            entry = subprocess.run(
+                [sys.executable, str(extracted / "scripts/team-update.py"), "status", "--help"],
+                capture_output=True, text=True, check=False,
+            )
+            self.assertEqual(entry.returncode, 0, entry.stderr)
+            if sys.platform == "win32":
+                wrapper_command = ["powershell.exe", "-NoProfile", "-File",
+                                   str(extracted / "scripts/install-updater.ps1"), "--help"]
+            else:
+                wrapper_command = ["/bin/sh", str(extracted / "scripts/install-updater.command"),
+                                   "--help"]
+            wrapper_probe = subprocess.run(wrapper_command, capture_output=True, text=True,
+                                           check=False)
+            self.assertEqual(wrapper_probe.returncode, 0, wrapper_probe.stderr)
 
 
 if __name__ == "__main__":

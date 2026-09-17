@@ -9,6 +9,8 @@ from logging.handlers import RotatingFileHandler
 import os
 from pathlib import Path
 import shutil
+import shlex
+import subprocess
 import sys
 import tempfile
 
@@ -273,8 +275,18 @@ def _install(args, output):
             state["last_result"] = "repair-required"
             store.write_state(state)
             raise
-    return run_lifecycle("status", store, engine, scheduler, output=output,
-                         json_output=args.json)
+    command = [str(python), str(entry), "status", "--state-dir", str(root)]
+    rendered = subprocess.list2cmdline(command) if sys.platform == "win32" else shlex.join(command)
+    value = _status(state, scheduler)
+    if args.json:
+        value["management_command"] = rendered
+        output.write(json.dumps(value, sort_keys=True) + "\n")
+    else:
+        output.write("enabled={} installed={} available={} result={} loaded={}\n".format(
+            value["scheduler_enabled"], value["installed_version"],
+            value["available_version"], value["last_result"], value["loaded_session"]))
+        output.write("management-command=" + rendered + "\n")
+    return 0
 
 
 def _parser():

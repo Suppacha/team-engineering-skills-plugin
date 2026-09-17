@@ -141,6 +141,45 @@ class CliLifecycleTests(unittest.TestCase):
                                                "--git", "/usr/bin/true"]), 2)
             self.assertFalse(state.exists())
 
+    def test_successful_install_prints_reusable_management_command(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory) / "state with spaces"
+            root.mkdir()
+            python = Path(directory) / "python with spaces"
+            codex = Path(directory) / "codex"
+            git = Path(directory) / "git"
+            for executable in (python, codex, git):
+                executable.write_text("fixture")
+
+            store = MemoryStore({"enabled": False})
+            engine = unittest.mock.Mock()
+            engine.install_initial.return_value = {"last_result": "installed"}
+            engine.reconcile_completed_locked.return_value = {
+                "last_result": "installed", "installed": {"version": "2.2.0"}}
+            engine.status.return_value = engine.reconcile_completed_locked.return_value
+            scheduler = Schedule()
+            output = io.StringIO()
+            args = unittest.mock.Mock(json=False)
+            with patch.object(cli, "_validate_install", return_value=(root, codex, git, python)), \
+                 patch.object(cli, "Store", return_value=store), \
+                 patch.object(cli, "_freeze_runtime") as freeze, \
+                 patch.object(cli, "CodexClient"), \
+                 patch.object(cli, "Updater", return_value=engine), \
+                 patch.object(cli, "Scheduler", return_value=scheduler):
+                runtime = Path(directory) / "runtime"
+                entry = runtime / "scripts/team-update.py"
+                entry.parent.mkdir(parents=True)
+                entry.write_text("fixture")
+                freeze.return_value = runtime
+                self.assertEqual(cli._install(args, output), 0)
+
+            rendered = output.getvalue()
+            self.assertIn("management-command=", rendered)
+            self.assertIn(str(python), rendered)
+            self.assertIn(str(entry.resolve()), rendered)
+            self.assertIn(str(root), rendered)
+            self.assertIn(" status", rendered)
+
     def test_macos_installer_forwards_spaced_arguments_unchanged(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

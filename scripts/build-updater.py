@@ -15,6 +15,10 @@ from team_updater.cli import runtime_files
 
 ROOT = Path(__file__).resolve().parents[1]
 ZIP_TIMESTAMP = (1980, 1, 1, 0, 0, 0)
+DISTRIBUTION_FILES = (
+    "scripts/install-updater.command",
+    "scripts/install-updater.ps1",
+)
 
 
 def build(output: Path) -> None:
@@ -22,7 +26,7 @@ def build(output: Path) -> None:
     output.parent.mkdir(parents=True, exist_ok=True)
     released = dict(release_files(ROOT))
     selected = []
-    for name in sorted(runtime_files()):
+    for name in sorted((*runtime_files(), *DISTRIBUTION_FILES)):
         source = released.get(name)
         if source is None or source.is_symlink() or not source.is_file():
             raise RuntimeError(f"trusted-runtime-unavailable: {name}")
