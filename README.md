@@ -6,7 +6,8 @@ It combines 15 licensed skills with shared policies, task routes, project bootst
 and a reviewed change process. Individual developers use their own approved accounts.
 
 เริ่มใช้งานภาษาไทย: [Quick User Manual — เลือกอ่านเฉพาะ Tool ที่ใช้](docs/QUICKSTART_TH.md).
-ผู้ดูแล: [Native auto-update / Migration](docs/AUTO_UPDATE_ADMIN_TH.md) · [แบบบันทึก pilot](docs/AUTO_UPDATE_PILOT_TH.md) · [หลักฐานและข้อจำกัดคู่มือ](docs/MANUAL_SOURCES_TH.md).
+Codex Desktop Personal: [ติดตั้ง team-managed updater](docs/PERSONAL_AUTO_UPDATE_TH.md).
+ผู้ดูแล: [Release / Migration](docs/AUTO_UPDATE_ADMIN_TH.md) · [แบบบันทึก pilot](docs/AUTO_UPDATE_PILOT_TH.md) · [หลักฐานและข้อจำกัดคู่มือ](docs/MANUAL_SOURCES_TH.md).
 Public source: [Suppacha/team-engineering-skills-plugin](https://github.com/Suppacha/team-engineering-skills-plugin).
 Do not commit company secrets or private project information here.
 
@@ -25,7 +26,7 @@ configured CI checks are the actual controls. Read [Governance](docs/GOVERNANCE.
 
 ## Local ZIP/local-path testing
 
-Requires Python 3.10+ and Bash for verification/build. Bootstrap itself is Python
+Requires Python 3.11+ and Bash for verification/build. Bootstrap itself is Python
 standard-library only. Build and extract a trusted release:
 
 ```sh
@@ -47,26 +48,21 @@ codex plugin marketplace add /path/to/team-engineering-skills-marketplace-2.2.0
 codex plugin add team-engineering-skills@team-engineering-skills-marketplace
 ```
 
-For the public GitHub marketplace only after Admin activation and a passing pilot:
-
-```sh
-codex plugin marketplace add Suppacha/team-engineering-skills-plugin --ref stable
-codex plugin add team-engineering-skills@team-engineering-skills-marketplace
-```
-
+For Personal use after Admin activation and a passing macOS/Windows pilot, use
+the separately distributed team-managed updater described in
+[the Thai install guide](docs/PERSONAL_AUTO_UPDATE_TH.md). It uses Codex plugin
+commands internally after a capability probe; it is not native Codex auto-update.
 Alternatively use the supported Codex Plugins UI or `/plugins`. Availability
 depends on the client/account; this is not a universal installation path for
 every ChatGPT surface. Start a **new session** after installation.
 
 ### Update
 
-```sh
-codex plugin marketplace upgrade team-engineering-skills-marketplace
-codex plugin add team-engineering-skills@team-engineering-skills-marketplace
-```
-
-For local releases, register the newly extracted root if the path changed.
-Start a new session and separately review any project policy snapshot migration.
+The team updater checks protected `stable` at logon and every four hours. Sleep,
+shutdown, or offline periods delay delivery. Installed state is not proof that an
+existing session loaded the update: refresh/restart, start a new session, and
+separately review any project policy snapshot migration. The updater does not
+self-update from the plugin payload.
 
 ### Uninstall
 
@@ -165,6 +161,14 @@ is explicitly **SKIPPED**, not counted as platform runtime validation. The pinne
 PyYAML dependency above is not optional for development test discovery and is not a
 plugin runtime dependency. The manually dispatched workflow builds a ZIP
 artifact only; it does not automatically publish a release.
+
+Build the portable updater runtime separately. The archive is an exact trusted
+allowlist and excludes candidate payloads, credentials, pilot data, caches, and
+internal reports:
+
+```sh
+python3 scripts/build-updater.py --output dist/team-updater-2.2.0.zip
+```
 
 [Third-party notices](plugins/team-engineering-skills/THIRD_PARTY_NOTICES.md)
 retain the original licensing. [Governance](docs/GOVERNANCE.md) describes versioning,

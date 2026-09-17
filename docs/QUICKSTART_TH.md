@@ -1,101 +1,93 @@
 # Quick Start — Team Engineering Skills
 
-สำหรับสมาชิกทีม • อ่าน Quick Start และเฉพาะ Tool ที่ใช้ประมาณ 5 นาที
+สำหรับสมาชิกทีม: อ่านตารางนี้แล้วข้ามไปเฉพาะ Tool ที่ใช้ สถานะ candidate 2.2.0 **ยังไม่เปิดใช้งานและ pilot ยัง NOT RUN**. เส้นทาง Codex เป็นตัวอัปเดตที่ทีมดูแล ไม่ใช่ native Codex auto-update; company Workspace พักไว้
 
-> เส้นทาง native ใหม่ใช้ได้ **หลังผู้ดูแลเปิดใช้งานและผ่าน pilot** ของ client/OS นั้นเท่านั้น ขณะนี้ยังไม่รับรองว่าเปิดแล้ว หากผู้ดูแลยังไม่ประกาศ ให้ใช้ ZIP/local path รุ่นที่อนุมัติซึ่งยังเป็น fallback ที่ใช้งานได้แต่ไม่ auto-update
+| Tool | ติดตั้งครั้งแรก | เปลี่ยนเครื่อง | Skill Update | วิธีเช็ค Version |
+| --- | --- | --- | --- | --- |
+| ChatGPT | ติดตั้งจาก Personal/Shared marketplace ที่ผู้ดูแลอนุมัติ | ติดตั้งใหม่ตามบัญชี/สิทธิ์ | ตามช่องทางที่ผู้แชร์ประกาศ | ดู Installed/details แล้วเปิดแชตใหม่ |
+| Codex | หลัง release + pilot ผ่าน ให้ติดตั้ง updater หนึ่งครั้งต่อผู้ใช้ OS/เครื่อง | ติดตั้ง updater ใหม่ | ทีมตรวจเมื่อ logon และทุก 4 ชั่วโมง | `status` ดู installed; เปิดแชตใหม่เพื่อพิสูจน์ loaded |
+| Claude | ใช้ shared Skill หรือ ZIP ราย Skillที่ผู้ดูแลให้ | ติดตั้ง/อัปโหลดใหม่ตามบัญชี | shared Skill ตามผู้แชร์; ZIP ต้องรับใหม่ | ดู Skill details; อย่าเดาจากวันที่ |
+| Claude Code | เพิ่ม stable marketplace และ plugin ต่อผู้ใช้ OS | ติดตั้งใหม่ | เปิด third-party auto-update; reload/session ใหม่ | `claude plugin list --json` + loaded evidence |
 
-ชุดนี้ช่วยวิเคราะห์ Requirement, ออกแบบ UI และสร้าง Test Case ด้วย 15 Skills. ใช้เฉพาะข้อมูลที่องค์กรอนุญาตและตรวจคำตอบก่อนใช้จริง
-
-อย่าปะปนหลักฐานห้าชนิด: **installed** คือ client ลงไว้, **loaded** คือ session ใช้อยู่, **package version** คือรุ่นปลั๊กอิน, **Skill version** คือรุ่น Skill รายตัว และ **project snapshot** ใน `.team-ai/release.json` คือคำสั่งโปรเจกต์ที่ต้อง review/update แยก. `codex --version`/`claude --version` เป็นรุ่น client
-
-| Tool | Install | Update | Verify |
-| --- | --- | --- | --- |
-| [Codex](#codex) | company Workspace หลังเปิดใช้; ZIP fallback | daily provider sync แล้ว session ใหม่ | installed และ loaded แยกกัน |
-| [ChatGPT](#chatgpt) | ช่องทาง cloud แบบมีเงื่อนไข | ตาม Workspace/Skill ที่ Admin ประกาศ | ตรวจรายการ/Workspace จริง |
-| [Claude](#claude) | shared หรือ ZIP ราย Skill แบบมีเงื่อนไข | ตามผู้แชร์/ไฟล์ใหม่ | ตรวจ Skill details |
-| [Claude Code](#claude-code) | stable marketplace ต่อเครื่อง/ผู้ใช้หลังเปิดใช้; ZIP fallback | startup auto-check แล้ว reload | list + loaded session |
-
-ลองสั่ง: “ช่วยวิเคราะห์ requirement นี้และสร้าง test case แยกคำถามที่ยังไม่ชัด ห้ามใส่ผล PASS ก่อนรันทดสอบจริง” หาก Tool ไม่พบ Skill ให้แจ้ง ไม่ใช่อ้างว่าโหลดแล้ว
+`installed` คือรุ่นบนดิสก์, `loaded` คือรุ่นที่ session ใหม่ใช้จริง, `package` คือปลั๊กอิน, `Skill` คือแต่ละทักษะ และ `project snapshot` (`AGENTS.md`, `CLAUDE.md`, `.team-ai`) ไม่ถูกแก้อัตโนมัติ
 
 ## Codex
 
-### 1. Install
+### Install
 
-หลัง Admin ประกาศว่า company Workspace และคู่ OS/client ผ่าน pilot: เข้า Workspace บริษัท → Plugins → ติดตั้ง `team-engineering-skills` หนึ่งครั้ง → เปิด session ใหม่ ไม่เพิ่ม local marketplace ชื่อเดียวกันซ้อน บัญชีส่วนตัวและ CLI/IDE ที่ไม่ได้ pilot อยู่นอกขอบเขต
+หลังผู้ดูแลเปิด protected release, อนุมัติ release ที่แน่นอน และคู่ Codex Desktop personal/OS ผ่าน pilot แล้ว ให้ใช้ installer ที่ผู้ดูแลแจกตาม [คู่มือ personal updater](PERSONAL_AUTO_UPDATE_TH.md). ต้องมี Python 3.11+, Git และ Codex Desktop/คำสั่งภายในที่ updater ตรวจรองรับ การติดตั้งผูกกับผู้ใช้ OS และเครื่อง ไม่ sync ตามบัญชี Codex และไม่ใช้สิทธิ์ root/Admin
 
-หากยังไม่เปิดใช้ ให้รับ ZIP ที่อนุมัติ แตกใน path ถาวร แล้วเพิ่ม local marketplace ตามคู่มือเดิมจากผู้ดูแล
+### Use
 
-### 2. Use
+เปิด Codex Desktop ด้วยบัญชี Personal แล้วเปิดแชตใหม่ ตัวอย่าง: “ช่วยวิเคราะห์ requirement นี้ตามมาตรฐานทีม ถ้ายังไม่ได้โหลด Skill ให้แจ้งก่อน”
 
-> ช่วยวิเคราะห์ requirement นี้ ออกแบบหน้าจอ และสร้าง test case ที่อ้างอิงกัน
+### Update Skill
 
-### 3. Update Skill
+หลังติดตั้ง updater แล้ว scheduler ตรวจเมื่อ logon และทุก 4 ชั่วโมง เครื่องหลับ ปิด หรือ offline อาจทำให้ช้า; จะตรวจใหม่เมื่อ session/network กลับมา updater ไม่อัปเดตตัวเองและไม่ fallback ไป `main`/feature branch
 
-native path ใช้ Workspace sync ซึ่งอาจเป็น daily ไม่ใช่ทันทีหลัง Push; รอประกาศ sync แล้วเปิด session ใหม่ ไม่ต้อง Git Pull. ZIP path ต้องรับชุดใหม่และเปลี่ยน local source ตามขั้นตอนผู้ดูแล ไม่มี auto-update
+### Verify
 
-### 4. Verify
-
-ตรวจว่า plugin แสดง Installed ใน company Workspace แล้วถาม session ใหม่ให้แสดงหลักฐาน package/Skill ที่โหลดจริง หากตรวจไม่ได้ให้รายงานว่า “ตรวจสอบไม่ได้” อย่าใช้ project snapshot หรือเลขในคู่มือนี้แทน
+ใช้ `status` ดู enabled/paused, installed version/SHA, last result และ reload-required แล้ว refresh/restart Codex และเปิดแชตใหม่เพื่อเก็บ loaded evidence แยกกัน คำตอบของโมเดลอย่างเดียวไม่ใช่หลักฐาน version
 
 ## ChatGPT
 
-### 1. Install
+### Install
 
-ChatGPT cloud เป็นช่องทางแบบมีเงื่อนไขและอยู่นอก certification ของ native auto-update รอบนี้ ใช้เฉพาะเมื่อ Admin แชร์ plugin/Skill ใน Workspace ที่รองรับ: เข้า Workspace → Plugins/Skills → ติดตั้ง → เปิดแชตใหม่ GitHub public ไม่แปลว่ารายการถูกเผยแพร่แล้ว
+ใช้ Plugins Directory แท็บ Personal/Shared ตามสิทธิ์บัญชีและรายการที่ผู้ดูแลอนุมัติ แล้วเริ่มแชตใหม่ เส้นทาง company Workspace ของทีมนี้ **PAUSED** และ GitHub public ไม่ได้แปลว่า plugin ถูกเผยแพร่แล้ว
 
-### 2. Use
+### Use
 
-> ช่วยวิเคราะห์ requirement นี้ ถ้ายังไม่ได้โหลด Skill ของทีมให้แจ้งก่อน
+ตัวอย่าง: “ช่วยแตก acceptance criteria และระบุ assumption โดยใช้ Skill ของทีมที่โหลดอยู่”
 
-### 3. Update Skill
+### Update Skill
 
-ทำตามประกาศ Workspace/shared Skill; uploaded copy ส่วนตัวไม่ sync GitHub อัตโนมัติ
+ทำตามประกาศของผู้แชร์/marketplace; uploaded copy ส่วนตัวไม่ใช่ Git auto-update ที่รับรอง
 
-### 4. Verify
+### Verify
 
-ตรวจชื่อ Workspace, รายการ Installed และรายละเอียดรุ่น ถ้าไม่มีหลักฐาน loaded version ให้ผู้ดูแลยืนยัน
+ดู Installed และรายละเอียด source/version จาก UI แล้วเริ่มแชตใหม่ หากไม่มี loaded evidence ให้ระบุ unknown
 
 ## Claude
 
-### 1. Install
+### Install
 
-Claude chat เป็นช่องทางแบบมีเงื่อนไขและอยู่นอก certification รอบนี้ ใช้ shared Skill หรือ ZIP **ราย Skill** ที่ผู้ดูแลจัดให้เท่านั้น ไม่อัปโหลด ZIP marketplace ทั้งชุด
+ใช้ shared Skill หรือ ZIP **ราย Skill** ที่ผู้ดูแลจัดให้ตามสิทธิ์บัญชี ไม่อัปโหลด ZIP marketplace ทั้งชุด
 
-### 2. Use
+### Use
 
-> ช่วยสร้าง test case ตามมาตรฐานทีม แยกข้อเท็จจริงกับสมมติฐาน
+ตัวอย่าง: “ช่วยสร้าง test case ตามมาตรฐานทีม แยกข้อเท็จจริงกับสมมติฐาน”
 
-### 3. Update Skill
+### Update Skill
 
-shared Skill รับการแก้จากผู้แชร์เมื่อใช้ครั้งถัดไป; uploaded copy ต้องรับไฟล์ใหม่ แล้วเปิดแชตใหม่
+shared Skill รับการแก้จากผู้แชร์ตามบริการ; uploaded copy ต้องรับไฟล์ใหม่และเปิดแชตใหม่
 
-### 4. Verify
+### Verify
 
-เปิด Skill details ตรวจผู้แชร์/รุ่น หากไม่มีเลขรุ่นอย่าเดาจากวันที่อัปโหลด
+เปิด Skill details ตรวจผู้แชร์และรุ่น หากไม่มีเลขรุ่นอย่าเดาจากวันที่อัปโหลด
 
 ## Claude Code
 
-### 1. Install
+### Install
 
-หลัง Admin ประกาศว่าคู่ OS/client ผ่าน pilot ให้ติดตั้ง stable marketplace หนึ่งครั้งต่อเครื่องและผู้ใช้ OS:
+หลัง Admin ประกาศว่าคู่ OS/client ผ่าน pilot:
 
 ```sh
 claude plugin marketplace add Suppacha/team-engineering-skills-plugin@stable --scope user
 claude plugin install team-engineering-skills@team-engineering-skills-marketplace --scope user
 ```
 
-การตั้งค่า marketplace อย่างเดียวไม่ติดตั้ง plugin และไม่ sync ตามบัญชีไปเครื่องอื่น หากยังไม่เปิดใช้ ให้คง local ZIP fallback ตามประกาศทีม
+marketplace อย่างเดียวไม่ติดตั้ง plugin และไม่ sync ไปเครื่องอื่น
 
-### 2. Use
+### Use
 
-> ช่วยสร้าง test case จาก requirement และ UI นี้ โดยยังไม่ใส่ผลทดสอบจริง
+ตัวอย่าง: “ช่วยสร้าง test case จาก requirement และ UI นี้ โดยยังไม่ใส่ผลทดสอบจริง”
 
-### 3. Update Skill
+### Update Skill
 
-third-party auto-update ต้องเปิดสำหรับ marketplace; client ตรวจเบื้องหลังหลังเริ่มงานและอาจหน่วงได้ หลัง installed version เปลี่ยนให้ใช้ `/reload-plugins` หรือ session ใหม่ ไม่ต้องสั่ง update เองในเส้นทางที่กำลัง pilot
+third-party auto-update ต้องเปิดใน `/plugin` → Marketplaces; หลัง installed version เปลี่ยนให้ใช้ `/reload-plugins` หรือ session ใหม่
 
-### 4. Verify
+### Verify
 
-รัน `claude plugin list --json` ตรวจ installed source/version แล้ว `/reload-plugins` และตรวจ loaded version แยกกัน รายการบนดิสก์ไม่พิสูจน์ session เก่า
+ใช้ `claude plugin list --json` ตรวจ installed source/version แล้วเก็บ loaded evidence หลัง reload แยกกัน
 
-ปัญหา source ชื่อซ้ำหรือย้ายจาก ZIP ให้หยุดและติดต่อผู้ดูแล อย่าลบ backup, cache หรือไฟล์โปรเจกต์เอง รายละเอียด: [คู่มือ Admin และ migration](AUTO_UPDATE_ADMIN_TH.md) · [หลักฐาน/ข้อจำกัด](MANUAL_SOURCES_TH.md)
+พบ source ชื่อซ้ำ, `repair-required` หรือ migration จาก ZIP ให้หยุดและติดต่อผู้ดูแล อย่าลบ backup/cache/project files เอง: [คู่มือ Admin](AUTO_UPDATE_ADMIN_TH.md) · [ภาคผนวกซ่อม](MAINTAINER_APPENDIX_TH.md) · [หลักฐาน](MANUAL_SOURCES_TH.md)

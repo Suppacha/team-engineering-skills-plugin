@@ -5,7 +5,7 @@
 ## ขอบเขตและหลักฐานภายใน
 
 - Candidate 2.2.0 ปรับ VERSION, สอง manifests, registry และ Claude catalog ให้ตรงกัน; registry ยังมี 15 Skills แต่ละรายการเป็น 1.0.0 และยัง **NOT ACTIVATED**
-- ไม่แก้ Skill, registry, permission หรือพฤติกรรม runtime ในงานปรับคู่มือนี้
+- ไม่แก้ Skill payload/registry; งานนี้เพิ่ม trusted updater distribution และคู่มือ โดย runtime ไม่ self-update จาก candidate payload
 - ยังไม่ได้ทดสอบติดตั้ง/อัปเดตแบบ interactive ในทั้งสี่ Tool และไม่ได้พิสูจน์การอ่านจบภายในห้านาทีกับผู้ใช้จริง
 - ไม่มีหลักฐานการ import ชุดทีมเข้า ChatGPT Workspace, ไม่มี Claude shared link และไม่มี ZIP ราย Skill สำหรับ Claude ใน deliverable นี้ จึงระบุเงื่อนไขก่อนทำขั้นตอนแทนการรับรองว่าเปิดใช้แล้ว
 - คู่มือ Markdown แบ่ง Quick Start และสี่ Tool ให้ความยาวประมาณหนึ่งหน้าต่อส่วน; จำนวนหน้าพิมพ์ขึ้นกับฟอนต์/renderer ไม่ใช่ PDF ที่ล็อก pagination
@@ -16,8 +16,9 @@
 
 | Evidence (ตรวจ 2026-09-17) | Finding | Path ในคู่มือ |
 | --- | --- | --- |
-| [OpenAI Plugins](https://learn.chatgpt.com/docs/plugins) | ต้องแยก client ที่รองรับ; ไม่มี Plugins ใน IDE extension; ติดตั้งแล้วเริ่มแชต/session ใหม่ | ChatGPT/Codex Install และ Use |
-| [OpenAI packaging](https://developers.openai.com/plugins/build/plugins) | รองรับ local marketplace add และ marketplace upgrade; local source ต้องปรับไฟล์/รีสตาร์ตแอป | Codex Install/Update |
+| [OpenAI Plugins](https://learn.chatgpt.com/docs/plugins) | Personal tab/marketplace และการติดตั้งรองรับตาม client/account; ติดตั้งแล้วเริ่มแชต/session ใหม่ แต่ไม่ได้รับรอง native scheduled Git auto-update | ChatGPT/Codex Install และ Use |
+| [OpenAI build plugins](https://learn.chatgpt.com/docs/build-plugins) | รองรับ local/personal marketplace workflow ผ่าน `$plugin-creator`; ต้อง refresh/restart และทดสอบใน conversation ใหม่ | Codex Install/Update |
+| [OpenAI Windows app](https://learn.chatgpt.com/docs/windows/windows-app) | Windows Desktop รองรับ plugins/skills แต่ไม่ใช่หลักฐานว่า custom scheduler ของ repository ผ่าน pilot | Pilot Windows |
 | [ChatGPT Skills](https://help.openai.com/en/articles/20001066) | สิทธิ์บัญชี/Workspace มีเงื่อนไข; shared install กับ uploaded copy คนละเส้นทาง | ChatGPT Install |
 | [OpenAI workspace sync](https://learn.chatgpt.com/docs/enterprise/plugin-management) | ผู้ดูแล import/sync GitHub marketplace; pinned commit ไม่ตาม branch; sync ผิดพลาดอาจคงรุ่นเดิม | ChatGPT Update; อย่าเท่ากับ Git push แล้วผู้ใช้ได้ทันที |
 | [Claude Skills](https://support.claude.com/en/articles/12512180-use-skills-in-claude) | ต้องเปิด code execution; shared skill ของผู้รับอัปเดตเมื่อใช้ครั้งต่อไป | Claude Install/Update |
@@ -38,11 +39,11 @@ Candidate นี้เปลี่ยน **ปลั๊กอิน 2.1.0 → 2.
 ## การตั้งค่าที่ผู้ดูแลต้องทำแยกจากสมาชิก
 
 1. เตรียม client/บัญชีที่รองรับ และโปรเจกต์ตาม [ภาคผนวก Setup](MAINTAINER_APPENDIX_TH.md) ก่อนเริ่มจับเวลา 5 นาที
-2. คู่มือใช้ clean replacement ของ extracted source ที่ path เดิมพร้อม backup ไม่ใช้การ add marketplace ชื่อซ้ำเพื่อเปลี่ยน source ต้อง pilot ขั้นตอนนี้กับ client รุ่นจริงก่อนแจก update; ห้ามลบ cache หรือ overwrite คำสั่งโปรเจกต์เพื่อแก้ปัญหา
-3. ถ้าใช้ Git marketplace แทน ZIP: ผู้ใช้ที่ติดตั้งผ่าน marketplace ใช้คำสั่ง refresh ของ Tool ไม่ต้อง clone/pull อีกชุด; ผู้ที่ใช้ local Git checkout ต้อง pull/ref ตามที่ทีมอนุมัติก่อน refresh/reload เพราะ local directory ไม่ดึง remote ให้
-4. Codex Git source ใช้ `codex plugin marketplace upgrade team-engineering-skills-marketplace` เพื่อ refresh catalog แล้วตรวจ installation ใน UI และเริ่ม session ใหม่; ไม่ถือว่าคำสั่งนี้พิสูจน์ installed/loaded version
+2. Codex Personal updater ควบคุม source directory ของตนและคง previous verified package; ถ้าพบ source ชื่อซ้ำให้หยุดก่อน ไม่ overwrite/uninstall/cache cleanup อัตโนมัติ
+3. updater ใช้ Codex CLI เป็น internal installer interface หลัง capability probe; เอกสารสาธารณะที่ตรวจไม่รับรอง fixed shell command หรือ native scheduler จึงไม่ให้สมาชิกสั่ง marketplace upgrade เอง
+4. ติดตั้ง/อัปเดตสำเร็จบนดิสก์ยังไม่พิสูจน์ loaded version ต้อง refresh/restart และเปิดแชตใหม่
 5. Claude Code เพิ่ม plugin version เมื่อเผยแพร่จริง; commit ใหม่แต่ version เดิมอาจทำให้ update แจ้งว่าไม่มีรุ่นใหม่ ห้ามเรียกการเปลี่ยน source โดยคง 2.1.0 ว่า rollout รุ่นใหม่ที่ยืนยันแล้ว
-6. ChatGPT: ขอสิทธิ์และเลือก ref สำหรับ workspace import; ตรวจ sync report สำเร็จ ไม่ถือว่ามี GitHub repo แล้วสมาชิกเห็น plugin
+6. ChatGPT Personal: ตรวจสิทธิ์และรายการใน Plugins Directory; company Workspace rollout พักไว้ ไม่ถือว่ามี GitHub repo แล้วสมาชิกเห็น plugin
 7. Claude: เตรียม ZIP ราย Skill พร้อม resource ที่ต้องใช้และหลักฐาน version หรือ shared skill ที่ควบคุมได้ ทดสอบความเข้ากันได้ อย่าประกาศว่ารองรับทุก Skill ใน cloud เพียงเพราะ upload ได้
 8. Claude Code รุ่นใหม่บางแบบรองรับ sync จาก claude.ai แต่ไม่ใช่วิธีติดตั้ง local ในคู่มือนี้ อย่าให้ผู้ใช้ลงซ้ำทั้ง synced และ marketplace โดยไม่มีแผน
 
@@ -59,4 +60,4 @@ Candidate นี้เปลี่ยน **ปลั๊กอิน 2.1.0 → 2.
 
 แบบบันทึกผล native client ที่ยังว่างอยู่: [Auto-update pilot — ทั้งสี่คู่เริ่ม NOT RUN](AUTO_UPDATE_PILOT_TH.md). ขั้นตอนตั้งค่าและย้าย source: [คู่มือ Admin](AUTO_UPDATE_ADMIN_TH.md).
 
-ข้อจำกัด CLI: ใน environment ของรอบปรับเอกสารนี้ไม่พบ Codex executable ที่ path ที่ลอง จึงไม่อ้างว่ารันตัวอย่างติดตั้ง Codex สำเร็จ อ้างอิงคำสั่งจากเอกสารทางการเท่านั้น
+ข้อจำกัด CLI: capability ที่ตรวจจาก client ในเครื่องเป็นหลักฐานเฉพาะรุ่น/เครื่อง ไม่ใช่ public API stability หรือ Desktop/Windows certification; pilot จริงยัง NOT RUN

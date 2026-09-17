@@ -5,7 +5,8 @@ All notable changes to this marketplace are documented here.
 ## 2.2.0 - 2026-09-17 (candidate; not activated)
 
 - Adds fail-closed candidate, CI, approval, and stable-channel promotion gates with least-privilege release writes.
-- Adds native auto-update Admin and pilot runbooks while leaving every activation and pilot result explicitly not run.
+- Adds a reproducible allowlisted updater runtime ZIP, Personal macOS/Windows installation guide, and team-managed scheduler runbooks while leaving every activation and pilot result explicitly NOT RUN.
+- Keeps company Workspace rollout paused and distinguishes installed state from proof that a new Codex Desktop chat loaded the update.
 - Preserves all 15 skill payload hashes and skill versions; this candidate changes repository release controls and documentation only.
 
 ## 2.1.0 - 2026-09-15

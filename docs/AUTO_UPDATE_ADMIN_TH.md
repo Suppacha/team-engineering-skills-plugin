@@ -1,8 +1,8 @@
-# คู่มือผู้ดูแล native auto-update
+# คู่มือผู้ดูแล release และ team-managed auto-update
 
-> **NOT ACTIVATED — ยังไม่เปิดใช้งาน:** repository ยังไม่มีหลักฐานว่าตั้ง protected environment, stable channel, Workspace import และ pilot ครบจริง เอกสารนี้เป็น runbook ไม่ใช่ใบรับรองการเปิดใช้ ให้คง ZIP เป็น fallback จนผ่านทั้ง Admin configuration และ [pilot สี่คู่](AUTO_UPDATE_PILOT_TH.md)
+> **NOT ACTIVATED — ยังไม่เปิดใช้งาน:** repository ยังไม่มีหลักฐานว่าตั้ง protected environment, stable channel, release และ pilot ครบจริง เอกสารนี้เป็น runbook ไม่ใช่ใบรับรองการเปิดใช้ ให้คง ZIP เป็น fallback จนผ่านทั้ง Admin configuration และ [pilot สี่คู่](AUTO_UPDATE_PILOT_TH.md)
 
-ขอบเขตที่ตั้งใจรับรองคือ Codex ใน **company Workspace** และ Claude Code รุ่น/ระบบปฏิบัติการที่ผ่าน pilot เท่านั้น บัญชีส่วนตัว, Codex CLI/IDE และ Claude/ChatGPT cloud ไม่ได้ถูกรับรองโดยอัตโนมัติ
+ขอบเขตที่ตั้งใจรับรองคือ **Codex Desktop Personal บน macOS/Windows** และ Claude Code รุ่น/ระบบปฏิบัติการที่ผ่าน pilot เท่านั้น company Workspace **PAUSED**; Codex CLI/IDE และ Claude/ChatGPT cloud ไม่ได้ถูกรับรองโดยอัตโนมัติ CLI เป็นกลไกภายในของ installer ไม่ใช่ work surface ที่รับรอง
 
 ## เปิด release channel ที่ GitHub
 
@@ -56,18 +56,19 @@ Environment ต้องอนุญาตเฉพาะ branch `main` ผ่�
    exit 0 จึงยืนยัน ancestry; คำสั่งนี้ไม่แก้ branch/ref และไม่รัน candidate. หาก history หายหรือ shallow checkout พิสูจน์ไม่ได้ ให้หยุด activation และกู้ history-preserving merge ก่อน หาก baseline ที่ runtime ผูกไว้ผิดจริง ต้องทำ reviewed baseline correction ใน code พร้อม tests/review แยกต่างหาก ไม่เปลี่ยน input, สร้าง ancestry ปลอม หรือห้ามลด gate เพื่อให้ promotion ผ่าน
 3. รัน first approved promotion ผ่าน `Promote reviewed stable release`; ให้ workflow สร้าง `stable` จาก candidate SHA ที่ตรวจแล้ว **ห้ามสร้าง `stable` ว่างหรือชี้ SHA ที่ยังไม่ผ่าน gate ด้วยมือ**
 4. ตรวจ `stable` ref และ release record ว่าชี้ candidate SHA เดียวกัน พร้อม CI/approval evidence ที่ตรวจย้อนกลับได้
-5. เมื่อ bootstrap สำเร็จแล้วจึง import `stable` เข้า company Workspace และจึง enable Claude stable source สำหรับ pilot
+5. เมื่อ bootstrap สำเร็จแล้วจึงอนุมัติ updater artifact/checksum สำหรับ isolated Personal pilot และ enable Claude stable source สำหรับ pilot ห้ามเปิด production scheduler อัตโนมัติ
 
 หาก promotion แรกถูกปฏิเสธหรือ record ไม่ครบ ให้หยุดและแก้ gate/หลักฐาน ห้ามสร้าง branch ชั่วคราวเพื่อทำให้ provider import ผ่าน
 
-## เปิด Codex company Workspace
+## เปิด pilot Codex Desktop Personal
 
-1. ใน Admin > Plugins > Add > Import marketplace นำเข้า repository root `Suppacha/team-engineering-skills-plugin` โดยเลือก ref `stable` ไม่ใช่ `main` หรือ commit ที่หยุดนิ่ง
-2. ตรวจ import/sync report และ plugin `team-engineering-skills`; แก้ error ก่อนกำหนด access ให้เฉพาะ role/group ที่อนุมัติ
-3. ใช้บัญชีสมาชิกจริงติดตั้งจาก company Workspace แล้วเริ่ม session ใหม่ เก็บ installed evidence และ loaded evidence แยกกัน
-4. การ sync ปกติเป็น **daily sync ไม่ใช่ immediate Push delivery**. Admin อาจใช้ Sync now เพื่อวินิจฉัย แต่ pilot auto-update ต้องมีรอบที่ไม่พึ่ง Sync now
+1. สร้าง updater ZIP ด้วย `python3 scripts/build-updater.py --output dist/team-updater-2.2.0.zip`; ตรวจ reproducibility, contents และ SHA-256 แล้วแนบเฉพาะ artifact ที่ review แล้วกับ release ที่อนุมัติ
+2. ผู้ดูแล release ต้องยืนยันว่า `v2.2.0` ยังไม่เคยเผยแพร่ หากมีแล้วให้เพิ่ม version ห้าม overwrite. Candidate ต้องตรง protected `stable`, release record `promoted`, tag/SHA และ digest ทุกจุด
+3. ให้ operator ที่อนุมัติใช้ [คู่มือติดตั้ง Personal](PERSONAL_AUTO_UPDATE_TH.md) บน isolated macOS/Windows ด้วยสิทธิ์ผู้ใช้ปกติ Initial install ผ่านก่อนเปิด scheduler
+4. ตรวจ scheduler logon + 4 ชั่วโมง, sleep/offline/reconnect, `status`/`pause`/`resume`/`uninstall-updater`, previous package และ `repair-required`; แยก installed evidence จาก loaded evidenceในแชตใหม่
+5. Windows ต้องใช้เครื่องจริงที่มี Codex Desktop และ NTFS. ผล Windows CI หรือ CLI ไม่แทน Desktop/native-client pilot
 
-Repository policy ไม่แทน Workspace access policy. บัญชีส่วนตัวที่มีอยู่เดิมอยู่นอก assurance และห้ามสรุปว่าการล็อกอินบัญชีเดียวทำให้ local installation ตามไปทุก client
+ตัวอัปเดตเป็น per-OS-user/per-machine ไม่ใช่ per-account isolation. ห้ามอ้างว่าเปลี่ยน Workspace แล้ว local plugin ถูกถอนหรือซ่อนอัตโนมัติ company Workspace ยังพักไว้; หาก managed policy ขัดกับ Personal pilot ให้หยุด ไม่ bypass
 
 ## เปิด Claude Code stable marketplace
 
@@ -95,6 +96,6 @@ claude plugin install team-engineering-skills@team-engineering-skills-marketplac
 
 ## เกณฑ์เปิดให้ทีม
 
-ลำดับสถานะคือ Repository-ready → Admin-configured → Pilot-verified → Team-enabled. ก่อนเปลี่ยนขั้นให้ตรวจหลักฐานจริง: candidate SHA/CI/release record, protections และ human + live checks ของ Admin, Workspace sync report, แล้วผล [pilot](AUTO_UPDATE_PILOT_TH.md). Windows CI junction ที่ผ่านเป็น CI evidence ไม่ใช่ native client rollout evidence
+ลำดับสถานะคือ implementation-tested → protected release published → Pilot-verified รายคู่ → Team-enabled เฉพาะคู่ที่ผ่าน. ก่อนเปลี่ยนขั้นให้ตรวจ candidate SHA/CI/release record, protections, human + live checks ของ Admin, updater checksum และผล [pilot](AUTO_UPDATE_PILOT_TH.md). ต้องมี GitHub release Admin ดำเนินการ protection/writer/approval จริงและผู้ทดสอบ Windows Desktop จริง; Windows CI ที่ผ่านเป็น CI evidence ไม่ใช่ native client rollout evidence
 
 แหล่งอ้างอิงทางการ: [OpenAI Workspace plugin management](https://learn.chatgpt.com/docs/enterprise/plugin-management) · [Claude Code marketplace sources](https://code.claude.com/docs/en/plugin-marketplaces) · [Claude Code auto-update](https://code.claude.com/docs/en/discover-plugins#configure-auto-updates) · [Claude Code plugin reference](https://code.claude.com/docs/en/plugins-reference)

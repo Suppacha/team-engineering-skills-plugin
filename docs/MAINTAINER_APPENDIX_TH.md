@@ -132,14 +132,15 @@ category/skill ที่ตรงกัน ผลลัพธ์เขียน 
 และกรอกข้อมูลสังเคราะห์/ลบข้อมูลอ่อนไหวแล้วเท่านั้น ไม่มีระบบ upload อัตโนมัติ
 ห้ามแนบ secret, private code, customer data, raw logs หรือ prompt จริงทั้งชุด
 
-## 4. Update และ rollback
+## 4. Personal updater repair และ rollback
 
-Codex:
+Codex Desktop Personal ใช้ updater-owned source เท่านั้น ไม่ให้สมาชิกเดาคำสั่ง Codex CLI. ใช้ `status` อ่าน journal/state ก่อน:
 
-```sh
-codex plugin marketplace upgrade team-engineering-skills-marketplace
-codex plugin add team-engineering-skills@team-engineering-skills-marketplace
-```
+- `repair-required`: หยุด scheduler, เก็บ log/journal/current/previous ไว้ และตรวจ readback ของ Codex inventory; ห้าม retry mutation แบบเดาสถานะ
+- duplicate source: inventory marketplace/plugin ก่อน ขอความยินยอมก่อน disable/uninstall เฉพาะรายการเดิม; ห้ามลบ backup/cache/project files
+- locked activation บน Windows: คง current/previous ไว้ ปิด process ที่ operator ระบุแล้วตรวจใหม่; ห้าม rename/delete ซ้ำแบบ blind retry
+- runtime/protocol incompatible: แจก updater ZIP รุ่นใหม่ผ่าน review/checksum แยกต่างหาก candidate plugin ห้ามแทน trusted runtime
+- rollback ทีมทำ forward release version สูงขึ้นผ่าน gate เดิม ไม่ force-push `stable` ย้อนและไม่ overwrite release version
 
 Claude Code:
 
@@ -148,6 +149,7 @@ claude plugin marketplace update team-engineering-skills-marketplace
 claude plugin update team-engineering-skills
 ```
 
+เปิด session ใหม่/reload และ review policy snapshot แยกต่างหาก ไม่มี auto-migrate
 เปิด session ใหม่/reload และ review policy snapshot แยกต่างหาก ไม่มี auto-migrate
 rollback โดยกลับไปใช้ release ที่อนุมัติรุ่นก่อนและ revert commit ของ snapshot ผ่าน review
 Uninstall plugin ไม่ลบ `AGENTS.md`, `CLAUDE.md` หรือ `.team-ai/`

@@ -69,6 +69,15 @@ class WorkflowTests(unittest.TestCase):
             self.assertEqual(len(install), 1)
             self.assertLess(install[0], next(i for i, s in enumerate(steps) if "scripts/" in s.get("run", "")))
             if name == "verify":
-                junction = next(s for s in steps if s.get("name") == "Mandatory live NTFS junction regression")
-                self.assertEqual(junction["if"], "runner.os == 'Windows'")
-                self.assertIn("--required-test", junction["run"])
+                required = {
+                    "test_project_update.ProjectUpdateTests.test_windows_junction_alias_into_project_is_refused_without_writes",
+                    "test_personal_store.StoreTests.test_windows_lock_link_is_rejected_before_target_write",
+                    "test_personal_store.StoreTests.test_windows_held_lock_cannot_be_deleted_or_replaced",
+                }
+                gates = [s for s in steps if s.get("name", "").startswith("Mandatory live NTFS")]
+                self.assertEqual(len(gates), 3)
+                self.assertTrue(all(step["if"] == "runner.os == 'Windows'" for step in gates))
+                commands = "\n".join(step["run"] for step in gates)
+                for test_id in required:
+                    self.assertIn("--required-test", commands)
+                    self.assertIn(test_id, commands)

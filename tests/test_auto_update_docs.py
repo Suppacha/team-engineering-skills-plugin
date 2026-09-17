@@ -47,7 +47,7 @@ class AutoUpdateDocumentationTests(unittest.TestCase):
             "evidence_ref",
             "stable",
             "Suppacha/team-engineering-skills-plugin",
-            "daily",
+            "4 ชั่วโมง",
         ):
             with self.subTest(value=value):
                 self.assertIn(value, admin)
@@ -63,7 +63,7 @@ class AutoUpdateDocumentationTests(unittest.TestCase):
             "exact three-OS CI",
             "first approved promotion",
             "ตรวจ `stable` ref และ release record",
-            "จึง import",
+            "จึงอนุมัติ updater artifact",
         )
         positions = [admin.index(step) for step in sequence]
         self.assertEqual(positions, sorted(positions))
@@ -150,7 +150,7 @@ class AutoUpdateDocumentationTests(unittest.TestCase):
         quick = self.read("docs/QUICKSTART_TH.md")
         for heading in ("## Codex", "## ChatGPT", "## Claude", "## Claude Code"):
             self.assertIn(heading, quick)
-        for value in ("หลังผู้ดูแลเปิดใช้งานและผ่าน pilot", "ZIP", "installed", "loaded", "package", "Skill", "project snapshot"):
+        for value in ("หลังผู้ดูแลเปิด protected release", "ZIP", "installed", "loaded", "package", "Skill", "project snapshot"):
             with self.subTest(value=value):
                 self.assertIn(value, quick)
         self.assertIn("AUTO_UPDATE_ADMIN_TH.md", self.read("README.md"))

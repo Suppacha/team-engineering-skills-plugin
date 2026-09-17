@@ -22,12 +22,24 @@ jobs:
         run: python -m pip install PyYAML==6.0.2
       - name: All portable Python tests
         run: python scripts/verify-portable.py
-      - name: Mandatory live NTFS junction regression
+      - name: Mandatory live NTFS project junction regression
         if: runner.os == 'Windows'
         run: >-
           python scripts/verify-portable.py
           --required-test
           test_project_update.ProjectUpdateTests.test_windows_junction_alias_into_project_is_refused_without_writes
+      - name: Mandatory live NTFS updater lock reparse regression
+        if: runner.os == 'Windows'
+        run: >-
+          python scripts/verify-portable.py
+          --required-test
+          test_personal_store.StoreTests.test_windows_lock_link_is_rejected_before_target_write
+      - name: Mandatory live NTFS held lock replacement regression
+        if: runner.os == 'Windows'
+        run: >-
+          python scripts/verify-portable.py
+          --required-test
+          test_personal_store.StoreTests.test_windows_held_lock_cannot_be_deleted_or_replaced
       - name: Metadata gate and optional installed client validators
         if: runner.os == 'Linux'
         run: bash scripts/verify-package.sh
