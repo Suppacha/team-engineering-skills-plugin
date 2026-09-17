@@ -15,6 +15,12 @@ environment and deployment-review APIs.  Its contract is a mapping with:
 Task 2 is responsible for deriving that shape from fresh GitHub responses.
 No caller-supplied boolean (including ``approved: true``), chat approval, or
 unresolved reviewer login grants publication authority.
+
+Likewise, ``candidate["valid_package"]`` is normalized evidence rather than
+an independent integrity check performed here.  Before setting it to true,
+Task 2 must extract the exact-SHA package as bounded data and invoke the
+trusted workflow checkout's ``framework.validate_release(Path)``.  This pure
+module intentionally accepts no package path and executes no candidate code.
 """
 
 import re
@@ -76,7 +82,7 @@ def _valid_skill(skill: Any) -> bool:
 
 
 def check_candidate(candidate: dict, baseline: dict, ci: dict) -> list[str]:
-    """Return all reasons a candidate is ineligible for stable promotion."""
+    """Check normalized evidence; package integrity is established upstream."""
     errors: list[str] = []
     candidate = _mapping(candidate, "candidate", errors)
     baseline = _mapping(baseline, "baseline", errors)

@@ -49,7 +49,7 @@ Task 1 → Task 2 → Task 3 → Task 5 → Task 6; Task 4 ทำแยกขน
 ### Task 1: Pure release policy and package comparison
 
 **Files:** Create `scripts/release_policy.py`, `config/release-policy.json`, `tests/test_release_policy.py`.
-**Consumes:** existing `framework.validate_release(Path)` จาก `plugins/team-engineering-skills/scripts/framework.py`; normalized GitHub evidence supplied by Task 2.
+**Consumes:** normalized GitHub/package evidence supplied by Task 2. This layer is pure and does not read a package Path. Task 2 owns the call to the trusted `framework.validate_release(Path)` implementation and may set `valid_package: true` only after that call succeeds; Task 1 alone is not a publication or package-integrity boundary.
 **Produces:** `validate_sha(value: str) -> str`, `version_tuple(value: str) -> tuple[int,int,int]`, `check_candidate(candidate: dict, baseline: dict, ci: dict) -> list[str]`, `check_approval(evidence: dict, policy: dict, run_id: int, candidate_sha: str) -> list[str]`. Empty errors means accepted; any missing field yields an explicit error, never default approval.
 
 - [ ] Write failing tests using this minimal fixture contract:
@@ -87,7 +87,7 @@ def jobs_pass(jobs):
 ### Task 2: Evidence collection without publication authority
 
 **Files:** Create `scripts/release_github.py`, `tests/test_release_github.py`.
-**Consumes:** Task 1 policy; authenticated GitHub read access supplied by caller, never a token in input JSON.
+**Consumes:** Task 1 policy; authenticated GitHub read access supplied by caller, never a token in input JSON; existing `framework.validate_release(Path)` from the trusted workflow checkout (not candidate scripts).
 **Produces:** `GitHubClient(request)` with `get_json(path)`, `get_pages(path)`, `collect_candidate(sha, baseline_sha) -> dict`, `collect_approval(run_id, candidate_sha) -> dict`, `read_stable() -> str | None`. Injectable `request(method, path, body=None) -> (status, headers, data)`; production host fixed to `api.github.com`.
 
 - [ ] Write RED tests for two-page job listing and HTTP403/404/429/5xx; no unknown status is treated as a missing stable branch. Use fake transport:
@@ -103,7 +103,8 @@ def test_auth_failure_is_not_first_release(self):
 - [ ] Run `python3 -m unittest discover -s tests -p test_release_github.py -v`, confirm RED.
 - [ ] Implement stdlib urllib transport with timeout, bounded body size, no credential-bearing cross-host redirect, bounded pagination, bounded retries only for safe GET; error text excludes Authorization/secrets.
 - [ ] Fetch exact verify workflow runs for candidate SHA, event push/main; select latest run and latest attempt even if older run passed. Fetch all jobs for that attempt and validate repository/workflow identity before normalizing to Task 1 shape. Use real commit ancestry check for main/stable, not caller booleans. Extract manifests/registry as data at exact SHAs; verify allowlisted file payloads without executing scripts from candidates. An archive reader must reject traversal, links and unbounded contents.
-- [ ] Read environment protection, effective rulesets and run review history from GitHub APIs; resolve reviewer IDs from actual settings and compare to approved activation policy. Unknown rule types/evidence shapes fail closed. Bind approval to the current promotion run's immutable input SHA, not review of a different run or commit. Missing API permissions are actionable failures, not bypasses.
+- [ ] Validate the extracted candidate and baseline data with the trusted `framework.validate_release(Path)` before constructing normalized package evidence. Add real-package acceptance and tampered-package rejection tests; never copy `valid_package` from caller input or run candidate scripts.
+- [ ] Read environment protection, effective rulesets and run review history from GitHub APIs; resolve reviewer IDs from actual settings and compare to approved activation policy. Unknown rule types/evidence shapes fail closed. Bind approval to the current promotion run's immutable input SHA, not review of a different run or commit. Missing API permissions are actionable failures, not bypasses. **Execution hold (2026-09-17):** official REST visibility does not establish all bypass protections; user decision on the Admin evidence mechanism is required before implementing this production boundary.
 - [ ] Test wrong repo, malicious pagination URL, old successful rerun, symlink archive, main movement and unreadable approval history. GREEN target/full tests; commit `feat: collect immutable GitHub release evidence`.
 
 Official API sources to open during execution: [workflow runs/reviews](https://docs.github.com/en/rest/actions/workflow-runs), [environments](https://docs.github.com/en/rest/deployments/environments), [Git refs](https://docs.github.com/en/rest/git/refs), [rulesets](https://docs.github.com/en/rest/repos/rules). Test against current returned schemas; do not invent fields when a pilot API response differs.
