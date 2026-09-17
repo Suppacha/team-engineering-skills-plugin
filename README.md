@@ -5,7 +5,8 @@ plugin version `2.1.0` for Codex/ChatGPT plugin-capable clients and Claude Code.
 It combines 15 licensed skills with shared policies, task routes, project bootstrap
 and a reviewed change process. Individual developers use their own approved accounts.
 
-เริ่มใช้งานภาษาไทย: [Quickstart](docs/QUICKSTART_TH.md).
+เริ่มใช้งานภาษาไทย: [Quick User Manual — เลือกอ่านเฉพาะ Tool ที่ใช้](docs/QUICKSTART_TH.md).
+ผู้ดูแล: [Setup / Migration](docs/MAINTAINER_APPENDIX_TH.md) · [หลักฐานและข้อจำกัดคู่มือ](docs/MANUAL_SOURCES_TH.md).
 Public source: [Suppacha/team-engineering-skills-plugin](https://github.com/Suppacha/team-engineering-skills-plugin).
 Do not commit company secrets or private project information here.
 
