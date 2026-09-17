@@ -39,6 +39,27 @@ class SchedulerDefinitionTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "invalid-scheduler-value"):
             windows_task([r"C:\Python\python.exe", "bad\x01path", "check"], "user")
 
+    def test_semantic_xml_allows_formatting_order_and_known_safe_defaults_only(self):
+        raw = windows_task([r"C:\Program Files\python.exe", r"C:\team\update.py"], r"DOMAIN\person")
+        root = ET.fromstring(raw)
+        ns = "{http://schemas.microsoft.com/windows/2004/02/mit/task}"
+        settings = root.find(ns + "Settings")
+        settings[:] = list(reversed(list(settings)))
+        ET.SubElement(settings, ns + "Priority").text = "7"
+        ET.SubElement(settings, ns + "AllowStartOnDemand").text = "true"
+        for user in root.iter(ns + "UserId"):
+            user.text = r"domain\PERSON"
+        ET.indent(root)
+        normalized = ET.tostring(root)
+        self.assertEqual(Scheduler._canonical_xml(raw), Scheduler._canonical_xml(normalized))
+        for tag, text in (("RunLevel", "HighestAvailable"), ("Command", r"C:\evil.exe"),
+                          ("UserId", r"DOMAIN\other"), ("Priority", "0")):
+            changed = ET.fromstring(normalized)
+            next(changed.iter(ns + tag)).text = text
+            self.assertNotEqual(Scheduler._canonical_xml(raw), Scheduler._canonical_xml(ET.tostring(changed)))
+        ET.SubElement(settings, ns + "UnknownSetting").text = "true"
+        self.assertNotEqual(Scheduler._canonical_xml(raw), Scheduler._canonical_xml(ET.tostring(root)))
+
 
 class FakeMacRunner:
     def __init__(self):
@@ -168,7 +189,9 @@ class SchedulerLifecycleTests(unittest.TestCase):
                 if "/Create" in command:
                     xml_path = Path(command[command.index("/XML") + 1])
                     self.assertTrue(xml_path.is_file())
-                    installed["xml"] = xml_path.read_bytes()
+                    normalized = ET.fromstring(xml_path.read_bytes())
+                    ET.indent(normalized)
+                    installed["xml"] = ET.tostring(normalized)
                     return subprocess.CompletedProcess(command, 0, b"", b"")
                 raise AssertionError(command)
 

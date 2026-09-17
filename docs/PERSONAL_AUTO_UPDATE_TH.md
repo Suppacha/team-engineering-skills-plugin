@@ -10,7 +10,7 @@
 
 ## ติดตั้ง
 
-1. ตรวจ SHA-256 ของ ZIP updater ตามประกาศ release แล้วแตกไฟล์ไป directory ที่ผู้ใช้ OS คนนี้ควบคุม เปิด Terminal/PowerShell ที่ root ของไฟล์ที่แตก
+1. รับ ZIP updater และ SHA-256 จาก Admin ผ่านช่องทางแจกซอฟต์แวร์ที่ทีมอนุมัติแยกจาก protected GitHub release ตรวจ checksum แล้วแตกไฟล์ไป directory ที่ผู้ใช้ OS คนนี้ควบคุม เปิด Terminal/PowerShell ที่ root ของไฟล์ที่แตก
 2. หา absolute path จาก `PATH` ที่ผู้ใช้คนนี้ตั้งไว้ แล้วส่งให้ installer อย่างชัดเจน; หากหาไม่พบให้ติดตั้ง prerequisite หรือถามผู้ดูแล ห้ามเดา path:
 
    macOS:
@@ -29,7 +29,7 @@
    ```
 
    ใช้ `sh` ตามตัวอย่างเพราะ ZIP แบบ portable ไม่รับประกัน executable bit ของ wrapper ใช้สิทธิ์ผู้ใช้ปกติ ไม่ใช้ root, Run as administrator หรือ highest privileges Wrapper ไม่ค้นหา Codex/Git เองและไม่รองรับการ double-click โดยไม่มี arguments
-3. อ่าน source, plugin และตำแหน่ง scheduler ที่ installer แสดง หากพบ marketplace/plugin ชื่อซ้ำจาก ZIP/local/Git เดิม ให้หยุดและขอ migration จากผู้ดูแล
+3. ยืนยัน profile ที่ Codex Desktop ใช้งาน: installer ผูกกับ `CODEX_HOME` ที่มีผล หรือ home ของผู้ใช้ OS + `.codex` หากไม่ได้ตั้งค่า; ใช้ `--codex-home <absolute-path>` เมื่อต้องระบุ custom profile แล้วเก็บ absolute binding ใช้ทุกคำสั่งภายหลัง ไม่คัดลอก/อ่าน credentials การ probe prerequisites ใช้ temporary profile แยกเท่านั้น ไม่ใช่ production target หากพบ marketplace/plugin ชื่อซ้ำจาก ZIP/local/Git เดิม ให้หยุดและขอ migration จากผู้ดูแล การผูก profile นี้ไม่ใช่หลักฐาน account isolation หรือ Desktop loading
 4. initial check ต้องสำเร็จก่อน scheduler จึงเปิด: macOS ใช้ user LaunchAgent; Windows ใช้ Task Scheduler แบบ `InteractiveToken`/least privilege
 5. refresh/restart Codex Desktop และเปิดแชตใหม่เพื่อพิสูจน์ loaded evidence
 
@@ -46,4 +46,6 @@
 
 Installed version ไม่พิสูจน์ session เดิม ให้ refresh/restart และเปิดแชตใหม่เสมอ Log อยู่ในเครื่องเท่านั้น เป็น metadata จำกัดไม่เกิน 5 ไฟล์ ไฟล์ละ 1 MiB ไม่มี telemetry, prompt, credential หรือ path งาน
 
-Updater runtime ไม่ self-update จาก plugin package หาก protocol/runtime เปลี่ยน ผู้ดูแลต้องแจก updater ZIP ใหม่แยกต่างหาก ดูขั้นตอน `repair-required`, duplicate source และการเก็บ previous package ใน [ภาคผนวกผู้ดูแล](MAINTAINER_APPENDIX_TH.md)
+คำสั่ง management ที่ installer พิมพ์บน Windows เป็น PowerShell invocation ที่มี `&` และ literal quoting ให้คงทั้งบรรทัดรวมเครื่องหมาย quote; wrapper ใช้ Python 3 ที่ติดตั้งอยู่แล้วและโปรแกรมตรวจขั้นต่ำ 3.11+ ไม่ดาวน์โหลด runtime
+
+Updater runtime ไม่ self-update จาก plugin package การรันซ้ำต้องใช้ runtime/executable/profile binding เดิมทุก byte; หากเปลี่ยนจะหยุดด้วย `updater-runtime-migration-required` ไม่ swap ตัวที่กำลังทำงาน ผู้ดูแลต้องวางแผน migration แยก ดูขั้นตอน `repair-required`, `repair-verify`, duplicate source และการเก็บ previous package ใน [ภาคผนวกผู้ดูแล](MAINTAINER_APPENDIX_TH.md)

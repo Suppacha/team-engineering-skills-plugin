@@ -7,6 +7,7 @@ import json
 import os
 from pathlib import Path
 import shutil
+import stat
 import subprocess
 import tempfile
 import threading
@@ -30,22 +31,38 @@ def _require(value, code):
 
 def _same_path(left, right):
     try:
+        _unlinked(Path(left))
+        _unlinked(Path(right))
         return Path(left).resolve(strict=False) == Path(right).resolve(strict=False)
     except (OSError, TypeError, ValueError):
         return False
 
 
 def _tree(path: Path) -> dict:
+    _unlinked(path)
     _require(path.is_dir() and not path.is_symlink(), "invalid-plugin-cache")
     result = {}
     for item in sorted(path.rglob("*")):
-        _require(not item.is_symlink(), "invalid-plugin-cache")
+        _unlinked(item)
         if item.is_file():
             relative = item.relative_to(path).as_posix()
             result[relative] = hashlib.sha256(item.read_bytes()).hexdigest()
         else:
             _require(item.is_dir(), "invalid-plugin-cache")
     return result
+
+
+def _unlinked(path: Path) -> None:
+    """Inspect lexical ancestry before any resolve/read, including junctions."""
+    _require(path.is_absolute(), "invalid-plugin-cache")
+    for item in (*reversed(path.parents), path):
+        try:
+            info = item.lstat()
+        except FileNotFoundError:
+            continue
+        _require(not stat.S_ISLNK(info.st_mode)
+                 and not getattr(info, "st_file_attributes", 0) & 0x400,
+                 "invalid-plugin-cache")
 
 
 def _bounded_run(command, *, input, capture_output, shell, check, timeout, cwd, env):
@@ -112,6 +129,7 @@ class CodexClient:
         _require(executable.is_file() and not executable.is_symlink(), "invalid-codex-executable")
         home = codex_home if codex_home is not None else Path(os.environ.get("CODEX_HOME", ""))
         _require(isinstance(home, Path) and home.is_absolute(), "invalid-codex-home")
+        _unlinked(home)
         home.mkdir(mode=0o700, parents=True, exist_ok=True)
         _require(home.is_dir() and not home.is_symlink(), "invalid-codex-home")
         self.executable = executable.resolve(strict=True)
@@ -204,6 +222,7 @@ class CodexClient:
     def validate_source(self, source: Path) -> None:
         """Reject a same-name registration owned by anything else, without mutation."""
         _require(isinstance(source, Path) and source.is_absolute(), "invalid-source")
+        _unlinked(source)
         self._source = source.resolve(strict=False)
         for entry in self._marketplaces():
             if entry.get("name") != MARKETPLACE:
@@ -212,11 +231,27 @@ class CodexClient:
             _require(isinstance(market, dict) and market.get("sourceType") == "local"
                      and _same_path(entry.get("root"), source)
                      and _same_path(market.get("source"), source), "source-collision")
-        self.inventory()
+        installed = self.inventory()
+        if installed is not None:
+            _require(installed["enabled"], "plugin-disabled")
+
+    def _cache_path(self, version, reported=None):
+        expected = self.codex_home / "plugins/cache" / MARKETPLACE / PLUGIN / version
+        _unlinked(expected)
+        _require(expected.resolve(strict=True).is_relative_to(self.codex_home),
+                 "invalid-plugin-cache")
+        if reported is not None:
+            _require(isinstance(reported, str), "invalid-plugin-cache")
+            actual = Path(reported)
+            _unlinked(actual)
+            _require(actual.resolve(strict=True) == expected.resolve(strict=True),
+                     "invalid-plugin-cache")
+        return expected
 
     def register(self, source: Path):
         _require(isinstance(source, Path) and source.is_absolute() and source.is_dir()
                  and not source.is_symlink(), "invalid-source")
+        _unlinked(source)
         source = source.resolve(strict=True)
         self.validate_source(source)
         for entry in self._marketplaces():
@@ -263,8 +298,7 @@ class CodexClient:
             value = {"pluginId": SELECTOR, "name": PLUGIN, "marketplaceName": MARKETPLACE,
                      "version": candidate.version, "installedPath": str(expected_path),
                      "authPolicy": "ON_USE"}
-        expected_path = (self.codex_home / "plugins/cache" / MARKETPLACE / PLUGIN
-                         / candidate.version).resolve(strict=False)
+        expected_path = self._cache_path(candidate.version, value.get("installedPath"))
         _require(set(value) == {"pluginId", "name", "marketplaceName", "version",
                                "installedPath", "authPolicy"}
                  and value["pluginId"] == SELECTOR and value["name"] == PLUGIN
@@ -280,10 +314,11 @@ class CodexClient:
 
     def verify(self, source: Path, candidate: Candidate) -> bool:
         try:
+            _unlinked(source)
             self._source = source.resolve(strict=True)
             current = self.inventory()
-            expected_path = (self.codex_home / "plugins/cache" / MARKETPLACE / PLUGIN
-                             / candidate.version).resolve(strict=False)
+            expected_path = self._cache_path(candidate.version,
+                                            (self._evidence or {}).get("installed_path"))
             if (current is None or not current["enabled"] or current["version"] != candidate.version
                     or self._evidence is None
                     or not _same_path(self._evidence.get("installed_path"), expected_path)):

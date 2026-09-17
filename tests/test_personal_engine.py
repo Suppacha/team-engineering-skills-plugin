@@ -13,6 +13,7 @@ from team_updater.release import Candidate
 SHA_A = "a" * 40
 SHA_B = "b" * 40
 NOW = datetime(2026, 9, 17, 4, 0, tzinfo=timezone.utc)
+PROFILE = str(Path("/profile"))
 
 
 class MemoryStore:
@@ -69,15 +70,18 @@ class Client:
 
 class EngineTests(unittest.TestCase):
     def engine(self, store=None, releases=None, client=None):
+        if client is None:
+            client = Client()
+            client.installed = bool(store and store.state_value.get("installed"))
         return Updater(store or MemoryStore(), releases or Releases(Candidate("2.2.0", SHA_B, {})),
-                       client or Client(), Path("/usr/bin/git"), clock=lambda: NOW)
+                       client, Path("/usr/bin/git"), clock=lambda: NOW)
 
     def enabled_store(self):
         store = MemoryStore()
         store.state_value = {"schema": 1, "enabled": True,
             "installed": {"version": "2.1.0", "sha": SHA_A}, "available": None,
             "last_check": None, "last_result": "installed", "next_check": None,
-            "reload_required": False, "codex_home": "/profile"}
+            "reload_required": False, "codex_home": PROFILE}
         return store
 
     def test_disabled_check_does_not_mutate_plugin(self):
@@ -129,10 +133,11 @@ class EngineTests(unittest.TestCase):
         store = self.enabled_store()
         client = Client()
         candidate = Candidate("2.2.0", SHA_B, {})
+        client.installed = True
         result = self.engine(store, Releases(candidate, stable=SHA_A), client).check()
         self.assertEqual(result["last_result"], "stable-moved")
         self.assertNotIn("activate", store.events)
-        self.assertFalse(client.installed)
+        self.assertTrue(client.installed)
 
     def test_success_journals_each_phase_then_writes_state_last(self):
         store = self.enabled_store()
@@ -161,18 +166,20 @@ class EngineTests(unittest.TestCase):
         store = self.enabled_store()
         client = Client()
         store.fail_state_after_write = True
+        client.installed = True
         with self.assertRaisesRegex(RuntimeError, "crash-after-state"):
             self.engine(store=store, client=client).check()
         self.assertEqual(store.journal_value["phase"], "verified")
         store.events.clear()
         result = self.engine(store=store, client=client).check()
-        self.assertEqual(result["last_result"], "cooldown")
-        self.assertIn("journal:None", store.events)
+        self.assertEqual(result["last_result"], "repair-required")
+        self.assertIsNotNone(store.journal_value)
 
     def test_verified_journal_with_unverifiable_cache_requires_repair(self):
         store = self.enabled_store()
         client = Client()
         store.fail_state_after_write = True
+        client.installed = True
         with self.assertRaises(RuntimeError):
             self.engine(store=store, client=client).check()
         client.installed = False
@@ -184,11 +191,12 @@ class EngineTests(unittest.TestCase):
         store = self.enabled_store()
         client = Client()
         store.fail_state_after_write = True
+        client.installed = True
         with self.assertRaises(RuntimeError):
             self.engine(store=store, client=client).check()
-        result = self.engine(store=store, client=client).reconcile_completed()
-        self.assertEqual(result, store.state_value)
-        self.assertIsNone(store.journal_value)
+        with self.assertRaisesRegex(RuntimeError, "repair-required"):
+            self.engine(store=store, client=client).reconcile_completed()
+        self.assertIsNotNone(store.journal_value)
 
     def test_up_to_date_still_requires_installed_byte_verification(self):
         store = self.enabled_store()
@@ -202,7 +210,7 @@ class EngineTests(unittest.TestCase):
         result = self.engine(store=store).install_initial()
         self.assertFalse(result["enabled"])
         self.assertEqual(result["last_result"], "installed")
-        self.assertEqual(result["codex_home"], "/profile")
+        self.assertEqual(result["codex_home"], PROFILE)
 
     def test_network_failure_retains_installed_and_sets_bounded_next_check(self):
         class Offline:
@@ -212,6 +220,85 @@ class EngineTests(unittest.TestCase):
         self.assertEqual(result["installed"], {"version": "2.1.0", "sha": SHA_A})
         self.assertEqual(result["last_result"], "release-unavailable")
         self.assertEqual(result["next_check"], "2026-09-17T08:00:00+00:00")
+
+    def test_repair_latch_blocks_newer_release_and_reinstall_even_when_disabled(self):
+        for enabled in (True, False):
+            store = self.enabled_store()
+            store.state_value.update(enabled=enabled, last_result="repair-required")
+            engine = self.engine(store=store)
+            self.assertEqual(engine.check()["last_result"], "repair-required")
+            self.assertEqual(engine.install_initial()["last_result"], "repair-required")
+            self.assertTrue(store.state_value["repair_required"])
+            self.assertNotIn("activate", store.events)
+
+    def test_cache_mismatch_latches_stop_before_future_candidate(self):
+        store = self.enabled_store()
+        store.state_value["installed"] = {"version": "2.2.0", "sha": SHA_B}
+        engine = self.engine(store=store, client=Client())
+        self.assertEqual(engine.check()["last_result"], "repair-required")
+        engine.releases.value = Candidate("2.3.0", "c" * 40, {})
+        self.assertEqual(engine.install_initial()["last_result"], "repair-required")
+        self.assertNotIn("activate", store.events)
+
+    def test_repeat_installer_applies_regression_and_byte_verified_noop(self):
+        for version, sha, expected in (("2.3.0", SHA_A, "release-regression"),
+                                       ("2.2.0", SHA_A, "release-regression"),
+                                       ("2.2.0", SHA_B, "up-to-date")):
+            store = self.enabled_store()
+            store.state_value["installed"] = {"version": version, "sha": sha}
+            client = Client()
+            client.installed = True
+            result = self.engine(store=store, client=client).install_initial()
+            self.assertEqual(result["last_result"], expected)
+            self.assertNotIn("stage", store.events)
+            self.assertTrue(result["enabled"])
+
+    def test_staging_failure_persists_sanitized_outcome_and_current_check_time(self):
+        store = self.enabled_store()
+        store.state_value.update(last_result="up-to-date", last_check="old")
+        def fail(*args): raise RuntimeError("git-staging-failed")
+        store.stage = fail
+        engine = self.engine(store=store)
+        with self.assertRaisesRegex(RuntimeError, "git-staging-failed"):
+            engine.check()
+        state = engine.status()
+        self.assertEqual(state["last_result"], "git-staging-failed")
+        self.assertEqual(state["last_check"], NOW.isoformat())
+        self.assertFalse(state.get("repair_required", False))
+
+    def test_status_exposes_incomplete_journal_without_clearing_it(self):
+        store = self.enabled_store()
+        store.journal_value = {"phase": "installing"}
+        self.assertEqual(self.engine(store=store).status()["last_result"], "repair-required")
+        self.assertEqual(store.journal_value, {"phase": "installing"})
+
+    def test_bounded_failures_persist_outcomes_and_uncertain_mutations_latch(self):
+        for phase, code, expected in (("source", "source-collision", "source-collision"),
+                                      ("source", "plugin-disabled", "plugin-disabled"),
+                                      ("release", "sensitive payload", "operation-failed"),
+                                      ("activate", "rename failure", "repair-required"),
+                                      ("client", "client-status-unknown", "repair-required")):
+            with self.subTest(phase=phase, code=code):
+                store = self.enabled_store()
+                client = Client()
+                client.installed = True
+                release = Releases(Candidate("2.2.0", SHA_B, {}))
+                def fail(*args): raise ValueError(code)
+                if phase == "source": client.validate_source = fail
+                if phase == "release": release.candidate = fail
+                if phase == "activate": store.activate = fail
+                if phase == "client": client.install = fail
+                engine = self.engine(store, release, client)
+                with self.assertRaises(ValueError): engine.check()
+                result = engine.status()
+                self.assertEqual(result["last_result"], expected)
+                self.assertEqual(result["last_check"], NOW.isoformat())
+                if phase in {"source", "release"}:
+                    self.assertIsNone(store.journal_value)
+                    self.assertNotIn("activate", store.events)
+                else:
+                    self.assertTrue(result["repair_required"])
+                    self.assertFalse(result["enabled"])
 
 
 if __name__ == "__main__": unittest.main()

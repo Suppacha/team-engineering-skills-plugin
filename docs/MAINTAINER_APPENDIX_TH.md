@@ -136,10 +136,11 @@ category/skill ที่ตรงกัน ผลลัพธ์เขียน 
 
 Codex Desktop Personal ใช้ updater-owned source เท่านั้น ไม่ให้สมาชิกเดาคำสั่ง Codex CLI. ใช้ `status` อ่าน journal/state ก่อน:
 
-- `repair-required`: หยุด scheduler, เก็บ log/journal/current/previous ไว้ และตรวจ readback ของ Codex inventory; ห้าม retry mutation แบบเดาสถานะ
+- `repair-required`: ใช้ `pause` หรือ `uninstall-updater` หยุด scheduler ที่พิสูจน์ ownership ได้แม้ journal ไม่สมบูรณ์ เก็บ log/journal/current/previous ไว้; `check`, `resume` และการรัน installer ซ้ำไม่ล้าง repair latch
+- `repair-verify` เป็นคำสั่งตรวจอย่างเดียวหลัง Admin ตรวจการกู้เครื่อง: ตรวจ current package, saved installed/cache bytes, source และ frozen profile ตรงกันทั้งหมดก่อนล้าง latch/journal ไม่ติดตั้ง ไม่ downgrade และไม่เปิด scheduler เมื่อสำเร็จยัง paused; ใช้ `resume` แยกต่างหาก หาก journal/state ไม่รู้จักหรือหลักฐานไม่ตรงให้หยุดรอ Admin recovery ห้ามลบ journal/state เพื่อข้าม gate
 - duplicate source: inventory marketplace/plugin ก่อน ขอความยินยอมก่อน disable/uninstall เฉพาะรายการเดิม; ห้ามลบ backup/cache/project files
 - locked activation บน Windows: คง current/previous ไว้ ปิด process ที่ operator ระบุแล้วตรวจใหม่; ห้าม rename/delete ซ้ำแบบ blind retry
-- runtime/protocol incompatible: แจก updater ZIP รุ่นใหม่ผ่าน review/checksum แยกต่างหาก candidate plugin ห้ามแทน trusted runtime
+- runtime/protocol/executable/profile binding เปลี่ยน: installer ปฏิเสธด้วย `updater-runtime-migration-required` ไม่แทน runtime/config เดิม ต้องวางแผน migration ที่ Admin อนุมัติแยกต่างหากและแจก ZIP ผ่านช่องทางซอฟต์แวร์ทีมพร้อม review/checksum ไม่เพิ่ม asset ใน protected release; candidate plugin ห้ามแทน trusted runtime
 - rollback ทีมทำ forward release version สูงขึ้นผ่าน gate เดิม ไม่ force-push `stable` ย้อนและไม่ overwrite release version
 
 Claude Code:
@@ -150,8 +151,7 @@ claude plugin update team-engineering-skills
 ```
 
 เปิด session ใหม่/reload และ review policy snapshot แยกต่างหาก ไม่มี auto-migrate
-เปิด session ใหม่/reload และ review policy snapshot แยกต่างหาก ไม่มี auto-migrate
-rollback โดยกลับไปใช้ release ที่อนุมัติรุ่นก่อนและ revert commit ของ snapshot ผ่าน review
+การกลับไปใช้ release ที่อนุมัติรุ่นก่อนหรือ revert snapshot ใช้ได้เฉพาะ emergency recovery รายเครื่องที่ Admin อนุมัติชัดเจน ไม่ใช่ normal stable rollback และไม่ใช่การสั่ง updater ให้ downgrade
 Uninstall plugin ไม่ลบ `AGENTS.md`, `CLAUDE.md` หรือ `.team-ai/`
 
 สำหรับ project ที่ bootstrap ด้วย contract V2 ให้สร้าง proposal ใน directory ใหม่ก่อน:

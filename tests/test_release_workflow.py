@@ -81,3 +81,13 @@ class WorkflowTests(unittest.TestCase):
                 for test_id in required:
                     self.assertIn("--required-test", commands)
                     self.assertIn(test_id, commands)
+                additional = {
+                    "test_personal_client.CodexClientTests.test_cache_link_escape_is_rejected_on_install_and_verify",
+                    "test_personal_integration_fixes.PersistenceTests.test_native_shell_management_command_preserves_spaces_and_metacharacters",
+                    "test_personal_cli.CliLifecycleTests.test_native_installer_forwards_spaced_arguments_unchanged",
+                    "test_personal_integration_fixes.PersistenceTests.test_config_state_journal_write_without_unix_fchmod",
+                }
+                safety = [s for s in steps if s.get("name", "").startswith("Mandatory Windows updater")]
+                self.assertEqual(len(safety), len(additional))
+                self.assertTrue(all(s["if"] == "runner.os == 'Windows'" for s in safety))
+                self.assertEqual({s["run"].split("--required-test")[1].strip() for s in safety}, additional)

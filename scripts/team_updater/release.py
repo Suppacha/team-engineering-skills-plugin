@@ -120,7 +120,7 @@ class PublicReleaseClient:
             raise ValueError("stable-unavailable") from None
 
     def _version(self, sha: str) -> str:
-        data = self._get(PREFIX + "/contents/VERSION?ref=" + sha)
+        data = self._get(PREFIX + "/contents/plugins/team-engineering-skills/VERSION?ref=" + sha)
         _require(isinstance(data, dict) and data.get("type") == "file"
                  and data.get("encoding") == "base64", "invalid-version-evidence")
         size = data.get("size")

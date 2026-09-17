@@ -255,7 +255,8 @@ def _write_json(path: Path, value: dict, *, label: str) -> None:
     _require(len(raw) <= MAX_JSON, "invalid-" + label)
     descriptor, temporary = tempfile.mkstemp(prefix="." + path.name + ".", dir=path.parent)
     try:
-        os.fchmod(descriptor, 0o600)
+        if hasattr(os, "fchmod"):
+            os.fchmod(descriptor, 0o600)
         with os.fdopen(descriptor, "wb") as handle:
             descriptor = -1
             handle.write(raw)
@@ -350,9 +351,9 @@ class Store:
         self.state = self.root / "state.json"
         self.journal = self.root / "journal.json"
         self.lock_file = self.root / ".lock"
-        self.staging.mkdir(mode=0o700, exist_ok=True)
-        _require(self.staging.is_dir() and not self.staging.is_symlink()
-                 and not _has_reparse(self.staging), "unsafe-store-root")
+        if self.staging.exists() or self.staging.is_symlink():
+            _require(self.staging.is_dir() and not self.staging.is_symlink()
+                     and not _has_reparse(self.staging), "unsafe-store-root")
 
     @contextmanager
     def lock(self):
@@ -431,6 +432,7 @@ class Store:
         _require(isinstance(git_executable, Path) and git_executable.is_absolute(), "invalid-git-executable")
         git = git_executable.resolve(strict=True)
         _require(git.is_file() and not git_executable.is_symlink(), "invalid-git-executable")
+        self.staging.mkdir(mode=0o700, exist_ok=True)
         work = Path(tempfile.mkdtemp(prefix=".incoming-", dir=self.staging))
         database = work / "objects.git"
         snapshot = work / "snapshot"

@@ -196,16 +196,83 @@ class Scheduler:
                 raise RuntimeError("scheduler-status-unknown")
             if existing is None:
                 return False
-            return self._canonical_xml(existing) == self._canonical_xml(
-                windows_task(self.argv, self.user_id))
+            return self._windows_matches(existing, windows_task(self.argv, self.user_id))
         raise RuntimeError("unsupported-platform")
 
     @staticmethod
     def _canonical_xml(raw):
         try:
-            return ET.tostring(ET.fromstring(raw), encoding="utf-8")
+            root = ET.fromstring(raw)
+            prefix = "{" + XML_NS + "}"
+            defaults = {"Priority": "7", "AllowStartOnDemand": "true",
+                        "RunOnlyIfIdle": "false", "WakeToRun": "false",
+                        "RunOnlyIfNetworkAvailable": "false", "ExecutionTimeLimit": "PT72H"}
+            def semantic(node, parent=""):
+                tag = node.tag.removeprefix(prefix)
+                text = (node.text or "").strip()
+                # Only leaf values with documented harmless scheduler defaults
+                # may disappear. Unknown fields and duplicate nodes still differ.
+                if (parent == "Settings" and not node.attrib and not list(node)
+                        and defaults.get(tag) == text):
+                    return None
+                if parent == "RegistrationInfo" and tag in {"Date", "Author", "URI"}:
+                    return None
+                if tag == "UserId":
+                    text = text.casefold()
+                children = [value for child in node if (value := semantic(child, tag)) is not None]
+                return (node.tag, tuple(sorted(node.attrib.items())), text, tuple(sorted(children)))
+            return semantic(root)
         except (ET.ParseError, ValueError):
             raise RuntimeError("scheduler-collision") from None
+
+    def _windows_matches(self, existing, expected):
+        if self._canonical_xml(existing) == self._canonical_xml(expected):
+            return True
+        # Task Scheduler may serialize an account name as its SID. Resolve
+        # both identities through Windows, never equate names heuristically.
+        if os.name != "nt":
+            return False
+        try:
+            roots = [ET.fromstring(raw) for raw in (existing, expected)]
+            for root in roots:
+                for user in root.iter("{" + XML_NS + "}UserId"):
+                    user.text = self._sid(user.text)
+            return self._canonical_xml(ET.tostring(roots[0])) == self._canonical_xml(ET.tostring(roots[1]))
+        except (ET.ParseError, ValueError, OSError):
+            return False
+
+    @staticmethod
+    def _sid(account):
+        import ctypes
+        from ctypes import wintypes
+        if account and account.upper().startswith("S-1-"):
+            return account.upper()
+        advapi = ctypes.WinDLL("advapi32", use_last_error=True)
+        lookup = advapi.LookupAccountNameW
+        lookup.argtypes = [wintypes.LPCWSTR, wintypes.LPCWSTR, wintypes.LPVOID,
+                           ctypes.POINTER(wintypes.DWORD), wintypes.LPWSTR,
+                           ctypes.POINTER(wintypes.DWORD), ctypes.POINTER(wintypes.DWORD)]
+        lookup.restype = wintypes.BOOL
+        size, domain_size, kind = wintypes.DWORD(), wintypes.DWORD(), wintypes.DWORD()
+        lookup(None, account, None, ctypes.byref(size), None, ctypes.byref(domain_size), ctypes.byref(kind))
+        if not 0 < size.value <= 1024 or domain_size.value > 32768:
+            raise ValueError("scheduler-collision")
+        sid, domain = ctypes.create_string_buffer(size.value), ctypes.create_unicode_buffer(domain_size.value)
+        if not lookup(None, account, sid, ctypes.byref(size), domain, ctypes.byref(domain_size), ctypes.byref(kind)):
+            raise ValueError("scheduler-collision")
+        convert = advapi.ConvertSidToStringSidW
+        convert.argtypes = [wintypes.LPVOID, ctypes.POINTER(wintypes.LPWSTR)]
+        convert.restype = wintypes.BOOL
+        result = wintypes.LPWSTR()
+        if not convert(sid, ctypes.byref(result)):
+            raise ValueError("scheduler-collision")
+        try:
+            return result.value
+        finally:
+            free = ctypes.WinDLL("kernel32").LocalFree
+            free.argtypes = [wintypes.HLOCAL]
+            free.restype = wintypes.HLOCAL
+            free(ctypes.cast(result, wintypes.HLOCAL))
 
     def status(self) -> bool:
         if not self._owned():
@@ -249,7 +316,7 @@ class Scheduler:
             expected = windows_task(self.argv, self.user_id)
             if existing is _UNKNOWN:
                 raise RuntimeError("scheduler-status-unknown")
-            if existing is not None and self._canonical_xml(existing) != self._canonical_xml(expected):
+            if existing is not None and not self._windows_matches(existing, expected):
                 raise RuntimeError("scheduler-collision")
             if existing is None:
                 descriptor, temporary = tempfile.mkstemp(prefix=".task-", suffix=".xml",

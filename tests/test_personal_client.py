@@ -1,5 +1,7 @@
 from pathlib import Path
 import json
+import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -131,9 +133,38 @@ class CodexClientTests(unittest.TestCase):
     def test_disabled_plugin_is_not_silently_reenabled(self):
         self.runner.installed = True
         self.runner.enabled = False
-        self.client.register(self.source)
         with self.assertRaisesRegex(ValueError, "plugin-disabled"):
-            self.client.install(self.source, CANDIDATE)
+            self.client.register(self.source)
+
+    def test_cache_link_escape_is_rejected_on_install_and_verify(self):
+        for intermediate in (False, True):
+            with self.subTest(intermediate=intermediate):
+                home = self.base / ("home-" + str(intermediate))
+                runner = Runner(home, self.source)
+                outside = self.base / ("outside-" + str(intermediate))
+                def linked(command, **kwargs):
+                    result = runner(command, **kwargs)
+                    if command[1:] == ["plugin", "add", "--json", SELECTOR]:
+                        cache = home / "plugins/cache/team-engineering-skills-marketplace/team-engineering-skills/2.2.0"
+                        target = cache.parent if intermediate else cache
+                        target.rename(outside)
+                        if os.name == "nt":
+                            subprocess.run(["cmd", "/c", "mklink", "/J", str(target), str(outside)],
+                                           check=True, capture_output=True)
+                        else:
+                            target.symlink_to(outside, target_is_directory=True)
+                    return result
+                client = CodexClient(self.exe, run=linked, codex_home=home)
+                client.register(self.source)
+                with self.assertRaisesRegex(ValueError, "invalid-plugin-cache"):
+                    client.install(self.source, CANDIDATE)
+                self.assertFalse(client.verify(self.source, CANDIDATE))
+
+    def test_disabled_plugin_is_refused_by_preactivation_validation(self):
+        self.runner.installed = True
+        self.runner.enabled = False
+        with self.assertRaisesRegex(ValueError, "plugin-disabled"):
+            self.client.validate_source(self.source)
 
     def test_timeout_with_successful_readback_is_not_blindly_retried(self):
         original = self.runner
@@ -163,7 +194,7 @@ class CodexClientTests(unittest.TestCase):
             return original(command, **kwargs)
         client = CodexClient(self.exe, run=uncertain, codex_home=self.home)
         client.register(self.source)
-        self.assertTrue(client.install(self.source, CANDIDATE)["installed_path"].endswith("/2.2.0"))
+        self.assertEqual(Path(client.install(self.source, CANDIDATE)["installed_path"]).name, "2.2.0")
         self.assertEqual(calls, 1)
 
     def test_uncertain_add_without_matching_readback_is_not_retried(self):
@@ -212,7 +243,9 @@ class CodexClientTests(unittest.TestCase):
                                   + "stream.write('x' * 2097152); stream.flush()\n"
                                   + f"pathlib.Path({str(marker)!r}).write_text('unbounded')\n")
                 script.chmod(0o700)
-                client = CodexClient(script, codex_home=self.home)
+                def native_python(command, **kwargs):
+                    return client_module._bounded_run([sys.executable, str(script), *command[1:]], **kwargs)
+                client = CodexClient(Path(sys.executable).resolve(), run=native_python, codex_home=self.home)
                 with self.assertRaisesRegex(RuntimeError, "client-output-limit"):
                     client.probe()
                 self.assertFalse(marker.exists())

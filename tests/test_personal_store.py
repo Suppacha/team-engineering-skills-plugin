@@ -38,7 +38,12 @@ class StoreTests(unittest.TestCase):
     def test_state_and_journal_are_atomic_bounded_json(self):
         self.store.write_state({"installed": {"version": "2.2.0", "sha": SHA}})
         self.assertEqual(self.store.read_state()["installed"]["sha"], SHA)
-        self.assertEqual(self.store.state.stat().st_mode & 0o077, 0)
+        if os.name != "nt":
+            self.assertEqual(self.store.state.stat().st_mode & 0o077, 0)
+        else:
+            # Windows mode bits are not ACL evidence; prove usable atomic IO.
+            self.store.write_state({"installed": {"version": "2.2.0", "sha": SHA}})
+            self.assertEqual(self.store.read_state()["installed"]["sha"], SHA)
         self.assertEqual(list(self.root.glob(".state.json.*")), [])
         self.store.write_journal({"operation": "activate", "sha": SHA})
         self.assertEqual(self.store.read_journal()["operation"], "activate")

@@ -62,7 +62,7 @@ Environment ต้องอนุญาตเฉพาะ branch `main` ผ่�
 
 ## เปิด pilot Codex Desktop Personal
 
-1. สร้าง updater ZIP ด้วย `python3 scripts/build-updater.py --output dist/team-updater-2.2.0.zip`; ตรวจ reproducibility, contents และ SHA-256 แล้วแนบเฉพาะ artifact ที่ review แล้วกับ release ที่อนุมัติ
+1. สร้าง updater ZIP ด้วย `python3 scripts/build-updater.py --output dist/team-updater-2.2.0.zip`; ตรวจ reproducibility, contents และ SHA-256 แล้วให้ Admin แจก ZIP ที่ review แล้วพร้อม checksum และ reviewed SHA ผ่านช่องทางแจกซอฟต์แวร์ที่ทีมอนุมัติแยกจาก GitHub protected release ห้ามแนบ ZIP/checksum หรือ asset เพิ่มใน release นั้น: publisher และ reader กำหนดให้มี **เพียง `release-record.json` หนึ่ง asset** เท่านั้น ไม่เปลี่ยน storage/access ของ protected release
 2. ผู้ดูแล release ต้องยืนยันว่า `v2.2.0` ยังไม่เคยเผยแพร่ หากมีแล้วให้เพิ่ม version ห้าม overwrite. Candidate ต้องตรง protected `stable`, release record `promoted`, tag/SHA และ digest ทุกจุด
 3. ให้ operator ที่อนุมัติใช้ [คู่มือติดตั้ง Personal](PERSONAL_AUTO_UPDATE_TH.md) บน isolated macOS/Windows ด้วยสิทธิ์ผู้ใช้ปกติ Initial install ผ่านก่อนเปิด scheduler
 4. ตรวจ scheduler logon + 4 ชั่วโมง, sleep/offline/reconnect, `status`/`pause`/`resume`/`uninstall-updater`, previous package และ `repair-required`; แยก installed evidence จาก loaded evidenceในแชตใหม่

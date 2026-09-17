@@ -7,7 +7,7 @@ All notable changes to this marketplace are documented here.
 - Adds fail-closed candidate, CI, approval, and stable-channel promotion gates with least-privilege release writes.
 - Adds a reproducible allowlisted updater runtime ZIP, Personal macOS/Windows installation guide, and team-managed scheduler runbooks while leaving every activation and pilot result explicitly NOT RUN.
 - Keeps company Workspace rollout paused and distinguishes installed state from proof that a new Codex Desktop chat loaded the update.
-- Preserves all 15 skill payload hashes and skill versions; this candidate changes repository release controls and documentation only.
+- Preserves all 15 skill payload hashes and skill versions; this candidate adds a local personal updater runtime and its tests, distribution, release controls, and documentation. Runtime implementation is not activation or native Desktop pilot evidence.
 
 ## 2.1.0 - 2026-09-15
 

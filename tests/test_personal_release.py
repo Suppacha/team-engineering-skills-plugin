@@ -21,6 +21,7 @@ PREFIX = "/repos/" + REPOSITORY
 SHA = "a" * 40
 OLD_SHA = "b" * 40
 VERSION = "2.2.0"
+VERSION_PATH = next(ROOT.glob("plugins/*/VERSION")).relative_to(ROOT).as_posix()
 
 
 def approval(run_id):
@@ -72,7 +73,7 @@ def fixture_routes():
         PREFIX + "/git/ref/heads/stable": {
             "ref": "refs/heads/stable", "object": {"type": "commit", "sha": SHA}
         },
-        PREFIX + f"/contents/VERSION?ref={SHA}": {
+        PREFIX + f"/contents/{VERSION_PATH}?ref={SHA}": {
             "type": "file", "encoding": "base64", "size": len(VERSION) + 1,
             "content": base64.b64encode((VERSION + "\n").encode()).decode(),
             "sha": "c" * 40,
@@ -116,7 +117,7 @@ class PublicReleaseTests(unittest.TestCase):
         self.assertEqual(candidate.record["approval"]["reviewer_github_id"], 12345)
 
     def test_accepts_github_base64_line_wrapping(self):
-        path = PREFIX + f"/contents/VERSION?ref={SHA}"
+        path = PREFIX + f"/contents/{VERSION_PATH}?ref={SHA}"
         content = self.fixture.routes[path]["content"]
         self.fixture.routes[path]["content"] = content[:4] + "\n" + content[4:]
         self.assertEqual(self.client.candidate().version, VERSION)
@@ -170,7 +171,7 @@ class PublicReleaseTests(unittest.TestCase):
                 PublicReleaseClient(fixture.request).candidate()
 
     def test_refuses_malformed_contents_or_release_json(self):
-        contents = PREFIX + f"/contents/VERSION?ref={SHA}"
+        contents = PREFIX + f"/contents/{VERSION_PATH}?ref={SHA}"
         release = PREFIX + "/releases/tags/v" + VERSION
         cases = (
             (contents, {"type": "file", "encoding": "utf-8", "size": 6, "content": VERSION}),
@@ -234,6 +235,12 @@ class PublicReleaseTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "pagination"):
             PublicReleaseClient(fixture.request).candidate()
         self.assertNotIn(PREFIX + "/releases/42/assets?per_page=100&page=11", fixture.paths)
+
+    def test_extra_updater_asset_remains_forbidden_by_release_contract(self):
+        self.fixture.routes[PREFIX + "/releases/42/assets?per_page=100&page=1"].append(
+            {"id": 44, "name": "team-updater.zip", "state": "uploaded"})
+        with self.assertRaisesRegex(ValueError, "invalid-release-assets"):
+            self.client.candidate()
 
 
 class UpgradeTests(unittest.TestCase):

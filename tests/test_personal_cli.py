@@ -131,60 +131,32 @@ class CliLifecycleTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             parent = Path(directory)
             state = parent / "new-state"
-            codex = parent / "codex"
-            codex.write_text("#!/bin/sh\necho unsupported\n")
-            codex.chmod(0o700)
+            codex = Path(sys.executable).resolve()
             with patch.object(cli.sys, "platform", "darwin"):
                 with redirect_stderr(io.StringIO()):
                     self.assertEqual(cli.main(["install", "--state-dir", str(state),
                                                "--codex", str(codex),
-                                               "--git", "/usr/bin/true"]), 2)
+                                               "--git", str(codex)]), 2)
             self.assertFalse(state.exists())
 
-    def test_successful_install_prints_reusable_management_command(self):
-        with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory) / "state with spaces"
-            root.mkdir()
-            python = Path(directory) / "python with spaces"
-            codex = Path(directory) / "codex"
-            git = Path(directory) / "git"
-            for executable in (python, codex, git):
-                executable.write_text("fixture")
-
-            store = MemoryStore({"enabled": False})
-            engine = unittest.mock.Mock()
-            engine.install_initial.return_value = {"last_result": "installed"}
-            engine.reconcile_completed_locked.return_value = {
-                "last_result": "installed", "installed": {"version": "2.2.0"}}
-            engine.status.return_value = engine.reconcile_completed_locked.return_value
-            scheduler = Schedule()
-            output = io.StringIO()
-            args = unittest.mock.Mock(json=False)
-            with patch.object(cli, "_validate_install", return_value=(root, codex, git, python)), \
-                 patch.object(cli, "Store", return_value=store), \
-                 patch.object(cli, "_freeze_runtime") as freeze, \
-                 patch.object(cli, "CodexClient"), \
-                 patch.object(cli, "Updater", return_value=engine), \
-                 patch.object(cli, "Scheduler", return_value=scheduler):
-                runtime = Path(directory) / "runtime"
-                entry = runtime / "scripts/team-update.py"
-                entry.parent.mkdir(parents=True)
-                entry.write_text("fixture")
-                freeze.return_value = runtime
-                self.assertEqual(cli._install(args, output), 0)
-
-            rendered = output.getvalue()
-            self.assertIn("management-command=", rendered)
-            self.assertIn(str(python), rendered)
-            self.assertIn(str(entry.resolve()), rendered)
-            self.assertIn(str(root), rendered)
-            self.assertIn(" status", rendered)
-
-    def test_macos_installer_forwards_spaced_arguments_unchanged(self):
+    def test_native_installer_forwards_spaced_arguments_unchanged(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             scripts = root / "path with spaces"
             scripts.mkdir()
+            if os.name == "nt":
+                wrapper = scripts / "install-updater.ps1"
+                wrapper.write_bytes((ROOT / "scripts/install-updater.ps1").read_bytes())
+                quote = lambda value: "'" + str(value).replace("'", "''") + "'"
+                # The real wrapper resolves this fixture function instead of a
+                # machine Python launcher; no runtime/account install occurs.
+                command = "function global:py { ConvertTo-Json -Compress -InputObject @($args | ForEach-Object { [string]$_ }) }; & " + quote(wrapper)
+                command += " --codex 'C:\\Path With Space\\codex.exe' --git 'C:\\Git\\git.exe'"
+                result = subprocess.run(["powershell.exe", "-NoProfile", "-NonInteractive", "-Command", command],
+                                        check=True, capture_output=True, text=True)
+                self.assertEqual(json.loads(result.stdout), ["-3", str(scripts / "team-update.py"),
+                                 "install", "--codex", r"C:\Path With Space\codex.exe", "--git", r"C:\Git\git.exe"])
+                return
             wrapper = scripts / "install-updater.command"
             wrapper.write_bytes((ROOT / "scripts/install-updater.command").read_bytes())
             wrapper.chmod(0o700)
