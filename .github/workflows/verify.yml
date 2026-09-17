@@ -20,6 +20,12 @@ jobs:
           python-version: "3.11"
       - name: All portable Python tests
         run: python scripts/verify-portable.py
+      - name: Mandatory live NTFS junction regression
+        if: runner.os == 'Windows'
+        run: >-
+          python scripts/verify-portable.py
+          --required-test
+          test_project_update.ProjectUpdateTests.test_windows_junction_alias_into_project_is_refused_without_writes
       - name: Metadata gate and optional installed client validators
         if: runner.os == 'Linux'
         run: bash scripts/verify-package.sh
