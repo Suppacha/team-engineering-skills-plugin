@@ -5,6 +5,17 @@
 ฐานงาน: commit `6ca868d`, plugin 2.1.0, 15 Skills
 ประเภทงาน: Architectural — เพิ่มกระบวนการเผยแพร่และเชื่อมระบบอัปเดตของผู้ให้บริการ
 
+## ข้อตกลงเพิ่มเติมที่ผู้ใช้อนุมัติ 17 กันยายน 2026
+
+ผู้ใช้ยอมรับให้ Admin ตรวจและบันทึกหลักฐานการตั้งค่าความปลอดภัยก่อนเปิดใช้ และตรวจซ้ำเมื่อเปลี่ยนสิทธิ์หรือกฎ ส่วนระบบยังตรวจ CI, SHA, เวอร์ชัน และผู้อนุมัติจริงทุก release. ผู้ใช้ขอ Push และเปิด Auto-update V2.2.0; คำขอนี้ไม่ใช่หลักฐานว่าตั้งค่า Admin หรือ pilot สำเร็จแล้ว.
+
+- ตรวจ reviewer/environment และกฎที่ REST เปิดเผยทุก release; ข้อมูลที่อ่านไม่ได้ต้องรายงาน ไม่ตีความเป็นไม่มีข้อจำกัด.
+- ส่วนที่ API ไม่รับรองการมองเห็น ได้แก่ bypass actors และ environment Admin bypass ให้ใช้บันทึกตรวจโดย Admin ผูก repository, environment ID, reviewer ID, writer App ID, ruleset IDs และเวลาตรวจ เก็บใน protected environment configuration ไม่รับ boolean จาก PR เป็นอำนาจ.
+- บันทึกต้องมี evidence reference ที่ Admin ตรวจจริง; ค่าเริ่มต้นยังไม่ configured. เมื่อสิทธิ์หรือกฎเปลี่ยน Admin ต้องตรวจใหม่ก่อน release. นี่เป็นการรับรองแบบคนร่วมกับระบบ ไม่ใช่การตรวจ drift ทุกชนิดโดยอัตโนมัติ.
+- ไม่ให้ writer Administration:write เพื่ออ่านหลักฐาน ไม่ใช้ owner PAT แทน dedicated App.
+- ผูก candidate กับ trusted workflow run-name `Promote <full SHA>` ตรวจ display_title, repository/workflow/main และ run_attempt=1. Approval API ไม่มี candidate SHA หรือ timestamp ในแต่ละ review จึงห้ามสร้างข้อมูลเหล่านี้ขึ้นเอง; ใช้เวลาสังเกตหลักฐานแทนและระบุให้ชัด.
+- Windows NTFS junction test ต้องรันจริงบน Windows CI; การข้ามบน macOS เป็นข้อจำกัดระบบปฏิบัติการ ไม่เปลี่ยนเป็นผลผ่านเทียม.
+
 ## 1. ผลลัพธ์ที่ต้องการและขอบเขต
 
 สมาชิกตั้งค่าครั้งแรกแล้วไม่ต้องดาวน์โหลด ZIP, Git Pull หรือสั่ง update ทุกครั้งที่ทีมเผยแพร่รุ่นใหม่ ยอมรับการ Reload หรือเริ่ม session ใหม่เพื่อใช้รุ่นใหม่
