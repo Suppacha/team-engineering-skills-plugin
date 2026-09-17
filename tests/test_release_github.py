@@ -62,7 +62,8 @@ class Fixture:
                 for i, os in enumerate(("windows-latest", "macos-latest", "ubuntu-latest"), 1)]},
             PREFIX + "/actions/runs/20": run(20, promotion=True),
             PREFIX + "/actions/runs/20/approvals": [{"state": "approved", "comment": "Ship it", "user": {"id": 123, "login": "Suppacha"}, "environments": [{"id": 77, "name": "team-plugin-stable"}]}],
-            PREFIX + "/environments/team-plugin-stable": {"id": 77, "name": "team-plugin-stable", "protection_rules": [{"type": "required_reviewers", "prevent_self_review": True, "reviewers": [{"type": "User", "reviewer": {"id": 123, "login": "Suppacha"}}]}]},
+            PREFIX + "/environments/team-plugin-stable": {"id": 77, "name": "team-plugin-stable", "protection_rules": [{"type": "required_reviewers", "prevent_self_review": True, "reviewers": [{"type": "User", "reviewer": {"id": 123, "login": "Suppacha"}}]}, {"type": "branch_policy"}], "deployment_branch_policy": {"protected_branches": False, "custom_branch_policies": True}},
+            PREFIX + "/environments/team-plugin-stable/deployment-branch-policies?per_page=100": {"total_count": 1, "branch_policies": [{"id": 89, "node_id": "synthetic", "name": "main", "type": "branch"}]},
             PREFIX + "/rules/branches/stable?per_page=100": copy.deepcopy(RULES),
         }
 
@@ -298,6 +299,61 @@ class GitHubEvidenceTests(unittest.TestCase):
         self.fixture.routes[PREFIX + "/actions/runs/20"]["actor"] = {"id": 123, "login": "Suppacha"}
         self.fixture.routes[PREFIX + "/environments/team-plugin-stable"]["protection_rules"][0]["prevent_self_review"] = False
         self.assertEqual(self.client.collect_approval(20, SHA)["reviewer_github_id"], 123)
+
+    def test_environment_protection_rule_order_is_irrelevant(self):
+        self.fixture.routes[PREFIX + "/environments/team-plugin-stable"]["protection_rules"].reverse()
+        self.assertEqual(self.client.collect_approval(20, SHA)["environment_id"], 77)
+
+    def test_environment_modes_and_duplicate_or_missing_rules_rejected(self):
+        env_path = PREFIX + "/environments/team-plugin-stable"
+        for mode in (None, {}, {"protected_branches": True, "custom_branch_policies": False},
+                     {"protected_branches": False, "custom_branch_policies": False},
+                     {"protected_branches": True, "custom_branch_policies": True},
+                     {"protected_branches": 0, "custom_branch_policies": 1}):
+            fixture = Fixture()
+            fixture.routes[env_path]["deployment_branch_policy"] = mode
+            with self.subTest(mode=mode), self.assertRaises(RuntimeError):
+                GitHubClient(fixture.request, policy=POLICY, admin_evidence=ADMIN).collect_approval(20, SHA)
+        for types in (("required_reviewers",), ("branch_policy",),
+                      ("required_reviewers", "required_reviewers"),
+                      ("branch_policy", "branch_policy"), ("required_reviewers", "unknown")):
+            fixture = Fixture()
+            rules = fixture.routes[env_path]["protection_rules"]
+            by_type = {r["type"]: r for r in rules}
+            fixture.routes[env_path]["protection_rules"] = [copy.deepcopy(by_type.get(t, {"type": t})) for t in types]
+            with self.subTest(types=types), self.assertRaises(RuntimeError):
+                GitHubClient(fixture.request, policy=POLICY, admin_evidence=ADMIN).collect_approval(20, SHA)
+
+    def test_environment_branch_policy_rejects_extra_wildcard_tag_and_unknown_type(self):
+        path = PREFIX + "/environments/team-plugin-stable/deployment-branch-policies?per_page=100"
+        main = {"id": 89, "name": "main", "type": "branch"}
+        for policies in ([], [main, {**main, "id": 90, "name": "feature"}],
+                         [{**main, "name": "*"}], [{**main, "name": "release/*"}],
+                         [{**main, "name": "refs/heads/main"}], [{**main, "type": "tag"}],
+                         [{"id": 89, "name": "main"}], [{**main, "type": None}],
+                         [{**main, "type": "unknown"}], [{**main, "id": True}]):
+            fixture = Fixture()
+            fixture.routes[path] = {"total_count": len(policies), "branch_policies": policies}
+            with self.subTest(policies=policies), self.assertRaises(RuntimeError):
+                GitHubClient(fixture.request, policy=POLICY, admin_evidence=ADMIN).collect_approval(20, SHA)
+
+    def test_environment_branch_policy_pagination_is_complete_before_decision(self):
+        path = PREFIX + "/environments/team-plugin-stable/deployment-branch-policies?per_page=100"
+        next_page = path + "&page=2"
+        main = self.fixture.routes[path]["branch_policies"]
+        self.fixture.routes[path] = (200, {"Link": f'<https://api.github.com{next_page}>; rel="next"'}, {"total_count": 1, "branch_policies": []})
+        self.fixture.routes[next_page] = {"total_count": 1, "branch_policies": main}
+        self.assertEqual(self.client.collect_approval(20, SHA)["environment_id"], 77)
+        self.fixture.routes[path] = (200, {"Link": f'<https://api.github.com{next_page}>; rel="next"'}, {"total_count": 2, "branch_policies": main})
+        self.fixture.routes[next_page] = {"total_count": 2, "branch_policies": [{"id": 90, "name": "main", "type": "tag"}]}
+        with self.assertRaisesRegex(RuntimeError, "main-only"):
+            self.client.collect_approval(20, SHA)
+
+    def test_environment_branch_policy_permission_failure_is_not_bypassed(self):
+        path = PREFIX + "/environments/team-plugin-stable/deployment-branch-policies?per_page=100"
+        self.fixture.routes[path] = (403, {}, {"message": "secret"})
+        with self.assertRaisesRegex(RuntimeError, "403"):
+            self.client.collect_approval(20, SHA)
 
     def test_approval_failclosed_table(self):
         cases = [

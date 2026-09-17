@@ -122,7 +122,7 @@ class GitHubClient:
         return self._get(path)[2]
 
     def get_pages(self, path):
-        """Return flattened list/jobs/workflow_runs; follow same-endpoint links only."""
+        """Flatten supported REST lists; follow bounded same-endpoint links only."""
         initial = urlsplit(_api_path(path)).path
         seen, result, total = set(), [], None
         for _ in range(MAX_PAGES):
@@ -130,7 +130,7 @@ class GitHubClient:
             seen.add(path)
             _, headers, data = self._get(path)
             if isinstance(data, dict):
-                keys = [key for key in ("jobs", "workflow_runs") if key in data]
+                keys = [key for key in ("jobs", "workflow_runs", "branch_policies") if key in data]
                 _require(len(keys) == 1 and type(data.get("total_count")) is int, "unknown paginated evidence shape")
                 if total is None:
                     total = data["total_count"]
@@ -352,11 +352,24 @@ class GitHubClient:
                  and run.get("status") == "in_progress", "approval not bound to first-attempt promotion candidate")
         environment = self.policy.get("environment")
         _require(isinstance(environment, str) and bool(environment), "missing protected environment policy")
-        env = self.get_json(self.prefix + "/environments/" + quote(environment, safe=""))
+        environment_path = self.prefix + "/environments/" + quote(environment, safe="")
+        env = self.get_json(environment_path)
         _require(isinstance(env, dict) and env.get("name") == environment and _positive(env.get("id")), "environment identity mismatch")
         protection = env.get("protection_rules")
-        _require(isinstance(protection, list) and len(protection) == 1, "unknown/missing environment protection rules")
-        rule = protection[0]
+        _require(isinstance(protection, list) and len(protection) == 2
+                 and all(isinstance(r, dict) and isinstance(r.get("type"), str) for r in protection)
+                 and {r["type"] for r in protection} == {"required_reviewers", "branch_policy"},
+                 "unknown, duplicate or missing environment protection rules")
+        mode = env.get("deployment_branch_policy")
+        _require(isinstance(mode, dict) and mode.get("protected_branches") is False
+                 and mode.get("custom_branch_policies") is True, "environment must use custom main-only branch policy")
+        branches = self.get_pages(environment_path + "/deployment-branch-policies?per_page=100")
+        # The official response schema permits absent type but then does not
+        # distinguish branches from tags. Never infer branch from its name.
+        _require(len(branches) == 1 and isinstance(branches[0], dict)
+                 and _positive(branches[0].get("id")) and branches[0].get("name") == "main"
+                 and branches[0].get("type") == "branch", "environment requires one unambiguous main-only branch policy")
+        rule = next(r for r in protection if r["type"] == "required_reviewers")
         _require(isinstance(rule, dict) and rule.get("type") == "required_reviewers"
                  and type(rule.get("prevent_self_review")) is bool, "required reviewers/self-review setting missing")
         reviewers = rule.get("reviewers")

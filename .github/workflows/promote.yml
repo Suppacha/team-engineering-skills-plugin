@@ -57,7 +57,6 @@ jobs:
           repositories: ${{ github.event.repository.name }}
           permission-contents: write
           permission-actions: read
-          permission-environments: read
       - name: Revalidate live evidence and publish without candidate execution
         env:
           GH_WRITER_TOKEN: ${{ steps.writer.outputs.token }}

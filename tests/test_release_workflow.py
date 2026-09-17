@@ -39,6 +39,8 @@ class WorkflowTests(unittest.TestCase):
         publish = jobs["publish"]["steps"]
         mint = next(s for s in publish if "create-github-app-token@" in s.get("uses", ""))
         self.assertEqual(mint["with"]["permission-contents"], "write")
+        self.assertEqual({k: v for k, v in mint["with"].items() if k.startswith("permission-")},
+                         {"permission-contents": "write", "permission-actions": "read"})
         self.assertEqual(mint["with"]["repositories"], "${{ github.event.repository.name }}")
         self.assertNotIn("permission-administration", mint["with"])
 
