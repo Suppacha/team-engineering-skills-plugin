@@ -78,8 +78,9 @@ class UpdaterDistributionTests(unittest.TestCase):
                 wrapper_command = ["powershell.exe", "-NoProfile", "-File",
                                    str(extracted / "scripts/install-updater.ps1"), "--help"]
             else:
-                wrapper_command = ["/bin/sh", str(extracted / "scripts/install-updater.command"),
-                                   "--help"]
+                # Match the documented portable invocation: ZIP extraction does
+                # not promise that the wrapper retains an executable mode.
+                wrapper_command = ["sh", str(extracted / "scripts/install-updater.command"), "--help"]
             wrapper_probe = subprocess.run(wrapper_command, capture_output=True, text=True,
                                            check=False)
             self.assertEqual(wrapper_probe.returncode, 0, wrapper_probe.stderr)

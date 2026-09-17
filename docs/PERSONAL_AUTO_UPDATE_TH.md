@@ -17,7 +17,7 @@
 
    ```sh
    CODEX_BIN="$(command -v codex)" && GIT_BIN="$(command -v git)" && \
-     ./scripts/install-updater.command --codex "$CODEX_BIN" --git "$GIT_BIN"
+     sh ./scripts/install-updater.command --codex "$CODEX_BIN" --git "$GIT_BIN"
    ```
 
    Windows PowerShell:
@@ -28,7 +28,7 @@
    & .\scripts\install-updater.ps1 --codex $codexBin --git $gitBin
    ```
 
-   ใช้สิทธิ์ผู้ใช้ปกติ ไม่ใช้ root, Run as administrator หรือ highest privileges Wrapper ไม่ค้นหา Codex/Git เองและไม่รองรับการ double-click โดยไม่มี arguments
+   ใช้ `sh` ตามตัวอย่างเพราะ ZIP แบบ portable ไม่รับประกัน executable bit ของ wrapper ใช้สิทธิ์ผู้ใช้ปกติ ไม่ใช้ root, Run as administrator หรือ highest privileges Wrapper ไม่ค้นหา Codex/Git เองและไม่รองรับการ double-click โดยไม่มี arguments
 3. อ่าน source, plugin และตำแหน่ง scheduler ที่ installer แสดง หากพบ marketplace/plugin ชื่อซ้ำจาก ZIP/local/Git เดิม ให้หยุดและขอ migration จากผู้ดูแล
 4. initial check ต้องสำเร็จก่อน scheduler จึงเปิด: macOS ใช้ user LaunchAgent; Windows ใช้ Task Scheduler แบบ `InteractiveToken`/least privilege
 5. refresh/restart Codex Desktop และเปิดแชตใหม่เพื่อพิสูจน์ loaded evidence
