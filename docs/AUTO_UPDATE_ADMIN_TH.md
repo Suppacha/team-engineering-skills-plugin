@@ -47,7 +47,13 @@ Environment ต้องอนุญาตเฉพาะ branch `main` ผ่�
 ทำตามลำดับนี้ ห้ามข้ามไป import source ที่ยังไม่มี:
 
 1. ตั้ง protections และ Admin evidence จาก live settings ให้ครบ รวมการยืนยันว่าไม่มีค่าชื่อซ้ำระดับ repository/organization
-2. เลือก reviewed main SHA แบบเต็มที่อยู่บน `main` และยืนยัน exact three-OS CI ของ SHA เดียวกันว่า Windows, macOS และ Ubuntu ผ่านครบ
+2. เลือก reviewed main SHA แบบเต็มที่อยู่บน `main` และยืนยัน exact three-OS CI ของ SHA เดียวกันว่า Windows, macOS และ Ubuntu ผ่านครบ Candidate แรกต้องสืบสายจาก reviewed V2.1 baseline `6ca868dbccba7d2e2f15dfd5cc6ac105980a8b13` ซึ่ง runtime ใช้เป็น `INITIAL_BASELINE`; PR1 ของ V2.1 เดิมไม่ได้ merge เข้าเส้นประวัติ `main` 2.0 จึงต้องนำ baseline นี้กลับมาด้วย history-preserving merge และ **ห้าม squash/rebase จน SHA นี้หายจาก ancestry**. ตรวจแบบ read-only จาก trusted checkout โดยแทน candidate SHA เต็มจริง:
+
+   ```sh
+   git merge-base --is-ancestor 6ca868dbccba7d2e2f15dfd5cc6ac105980a8b13 "FULL_CANDIDATE_SHA"
+   ```
+
+   exit 0 จึงยืนยัน ancestry; คำสั่งนี้ไม่แก้ branch/ref และไม่รัน candidate. หาก history หายหรือ shallow checkout พิสูจน์ไม่ได้ ให้หยุด activation และกู้ history-preserving merge ก่อน หาก baseline ที่ runtime ผูกไว้ผิดจริง ต้องทำ reviewed baseline correction ใน code พร้อม tests/review แยกต่างหาก ไม่เปลี่ยน input, สร้าง ancestry ปลอม หรือห้ามลด gate เพื่อให้ promotion ผ่าน
 3. รัน first approved promotion ผ่าน `Promote reviewed stable release`; ให้ workflow สร้าง `stable` จาก candidate SHA ที่ตรวจแล้ว **ห้ามสร้าง `stable` ว่างหรือชี้ SHA ที่ยังไม่ผ่าน gate ด้วยมือ**
 4. ตรวจ `stable` ref และ release record ว่าชี้ candidate SHA เดียวกัน พร้อม CI/approval evidence ที่ตรวจย้อนกลับได้
 5. เมื่อ bootstrap สำเร็จแล้วจึง import `stable` เข้า company Workspace และจึง enable Claude stable source สำหรับ pilot

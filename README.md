@@ -135,15 +135,35 @@ never put credentials into URLs or this package.
 
 ## Maintainer checks
 
+Python standard library ยังเพียงพอสำหรับ plugin runtime แต่ test suite ปกติ import
+PyYAML โดยตรง จึงใช้ `PyYAML==6.0.2` เป็น **mandatory development/test dependency**
+แยกจาก optional client validator. ติดตั้งใน virtual environment ของ repository
+ด้วย interpreter เดียวกับ `PYTHON_BIN`; ไม่ต้องติดตั้ง global
+
+macOS/Linux:
+
 ```sh
+python3 -m venv .test-venv
+./.test-venv/bin/python -m pip install 'PyYAML==6.0.2'
+export PYTHON_BIN="$PWD/.test-venv/bin/python"
 ./scripts/verify-package.sh
 ./scripts/build-release.sh
 ```
 
+Windows PowerShell สำหรับ portable test (การ build ZIP ใช้ Bash/CI):
+
+```powershell
+py -3 -m venv .test-venv
+& .\.test-venv\Scripts\python.exe -m pip install 'PyYAML==6.0.2'
+$env:PYTHON_BIN = (Resolve-Path .\.test-venv\Scripts\python.exe).Path
+& $env:PYTHON_BIN scripts\verify-portable.py
+```
+
 Portable tests and metadata/payload gates always run. Installed Codex and Claude
-validators also run; rejection fails verification. Missing optional validators
-(or PyYAML for the Codex validator) are explicitly **SKIPPED**, not counted as
-platform runtime validation. The manually dispatched workflow builds a ZIP
+validators also run; rejection fails verification. A missing optional client validator
+is explicitly **SKIPPED**, not counted as platform runtime validation. The pinned
+PyYAML dependency above is not optional for development test discovery and is not a
+plugin runtime dependency. The manually dispatched workflow builds a ZIP
 artifact only; it does not automatically publish a release.
 
 [Third-party notices](plugins/team-engineering-skills/THIRD_PARTY_NOTICES.md)
