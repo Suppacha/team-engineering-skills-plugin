@@ -8,7 +8,7 @@
 
 **Tech Stack:** Python 3.10+ standard library, unittest, Git, GitHub Actions/REST, native Workspace sync และ Claude Code marketplace; ไม่เพิ่ม updater runtime
 
-**Spec:** [Approved design](../specs/2026-09-17-team-plugin-auto-update-design.md)
+**Spec:** [Approved design](../specs/2026-09-17-team-plugin-auto-update-design.md), including the user-approved Admin evidence addendum dated 2026-09-17. The addendum supersedes REST-only assumptions below; user has authorized development-branch Push and requested live activation, subject to actual Admin configuration and evidence.
 
 ## Global Constraints
 
@@ -104,7 +104,7 @@ def test_auth_failure_is_not_first_release(self):
 - [ ] Implement stdlib urllib transport with timeout, bounded body size, no credential-bearing cross-host redirect, bounded pagination, bounded retries only for safe GET; error text excludes Authorization/secrets.
 - [ ] Fetch exact verify workflow runs for candidate SHA, event push/main; select latest run and latest attempt even if older run passed. Fetch all jobs for that attempt and validate repository/workflow identity before normalizing to Task 1 shape. Use real commit ancestry check for main/stable, not caller booleans. Extract manifests/registry as data at exact SHAs; verify allowlisted file payloads without executing scripts from candidates. An archive reader must reject traversal, links and unbounded contents.
 - [ ] Validate the extracted candidate and baseline data with the trusted `framework.validate_release(Path)` before constructing normalized package evidence. Add real-package acceptance and tampered-package rejection tests; never copy `valid_package` from caller input or run candidate scripts.
-- [ ] Read environment protection, effective rulesets and run review history from GitHub APIs; resolve reviewer IDs from actual settings and compare to approved activation policy. Unknown rule types/evidence shapes fail closed. Bind approval to the current promotion run's immutable input SHA, not review of a different run or commit. Missing API permissions are actionable failures, not bypasses. **Execution hold (2026-09-17):** official REST visibility does not establish all bypass protections; user decision on the Admin evidence mechanism is required before implementing this production boundary.
+- [ ] Read environment protection, effective rulesets and run review history from GitHub APIs; resolve reviewer IDs from actual settings and compare to approved activation policy. Unknown rule types/evidence shapes fail closed. Bind approval to the current promotion run's immutable input SHA, not review of a different run or commit. Missing API permissions are actionable failures, not bypasses. Use the approved protected-environment Admin evidence for API-invisible bypass controls; require re-review after rights/rules changes, and document residual manual drift detection. Do not demand invented REST fields.
 - [ ] Test wrong repo, malicious pagination URL, old successful rerun, symlink archive, main movement and unreadable approval history. GREEN target/full tests; commit `feat: collect immutable GitHub release evidence`.
 
 Official API sources to open during execution: [workflow runs/reviews](https://docs.github.com/en/rest/actions/workflow-runs), [environments](https://docs.github.com/en/rest/deployments/environments), [Git refs](https://docs.github.com/en/rest/git/refs), [rulesets](https://docs.github.com/en/rest/repos/rules). Test against current returned schemas; do not invent fields when a pilot API response differs.
