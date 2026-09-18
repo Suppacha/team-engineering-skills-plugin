@@ -47,6 +47,25 @@ class ReleaseDiagnosticTests(unittest.TestCase):
         self.assertEqual(result["metadata"], "target-mismatch")
         self.assertEqual(result["asset_count"], 0)
 
+    def test_invisible_known_draft_is_indeterminate_and_cli_fails(self):
+        def filtered(method, path, body=None):
+            if path == self.d.PREFIX + "/releases?per_page=100":
+                return 200, {}, []
+            return self.request(method, path, body)
+        env = dict(GITHUB_REPOSITORY=self.d.REPOSITORY, GITHUB_REF="refs/heads/main",
+                   GITHUB_EVENT_NAME="workflow_dispatch", GITHUB_RUN_ATTEMPT="1",
+                   GH_DIAGNOSTIC_TOKEN="SECRET_SENTINEL")
+        with patch.dict("os.environ", env, clear=True), \
+                patch.object(self.d, "github_request", return_value=filtered), \
+                patch("sys.stdout", new_callable=io.StringIO) as output:
+            code = self.d.main([])
+        result = json.loads(output.getvalue())
+        self.assertEqual(result["status"], "release-not-visible")
+        self.assertEqual(code, 1)
+        self.assertIsNone(result["asset_count"])
+        self.assertEqual(result["metadata"], "not-checked")
+        self.assertNotIn("SECRET_SENTINEL", output.getvalue())
+
     def test_untrusted_body_and_exception_are_redacted(self):
         self.release["body"] = "SECRET_SENTINEL"
         self.release["target_commitish"] = "SECRET_SENTINEL"

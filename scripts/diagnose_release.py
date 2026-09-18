@@ -48,7 +48,8 @@ def diagnose(request):
         result["tag_matches_candidate"] = validator._tag_sha("v2.2.0") == CANDIDATE
         release = validator._release("v2.2.0")
         if release is None:
-            result["status"] = "release-missing"
+            # The draft is known to exist; a filtered list cannot prove absence.
+            result["status"] = "release-not-visible"
             return result
         identity = release.get("id")
         if type(identity) is int and 0 < identity < 2**63:
@@ -84,7 +85,7 @@ def main(argv=None):
     except Exception:
         result = {"status": "read-failed"}
     print(json.dumps(result, sort_keys=True))
-    return 0 if result["status"] in ("observed", "release-missing") else 1
+    return 0 if result["status"] == "observed" else 1
 
 
 if __name__ == "__main__":
