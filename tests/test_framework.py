@@ -2,6 +2,7 @@
 import hashlib
 import importlib.util
 import json
+import os
 from pathlib import Path
 import shutil
 import subprocess
@@ -40,7 +41,7 @@ class BootstrapTests(unittest.TestCase):
         self.assertIn(".team-ai/standards/security.md", agents)
         self.assertIn("supply-chain-risk-auditor", agents)
         evidence = json.loads((self.project / ".team-ai/release.json").read_text())
-        self.assertEqual(evidence["version"], "2.0.0")
+        self.assertEqual(evidence["version"], "2.1.0")
         self.assertNotIn(str(self.project), json.dumps(evidence))
         for name, digest in evidence["sha256"].items():
             self.assertEqual(hashlib.sha256((self.project / ".team-ai" / name).read_bytes()).hexdigest(), digest)
@@ -114,14 +115,51 @@ class ReleaseSafetyTests(unittest.TestCase):
         spec.loader.exec_module(module)
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
-            for name in ("README.md", "docs/guide.md", "private-notes.md", ".sdd/internal.md",
+            for name in ("README.md", ".gitattributes", "docs/guide.md", "private-notes.md", ".sdd/internal.md",
                          "docs/.env", "docs/.env.production", "plugins/example/private.key",
                          "docs/id_rsa", "docs/cert.pem", ".github/workflows/verify.yml"):
                 path = root / name
                 path.parent.mkdir(parents=True, exist_ok=True)
                 path.write_text("fixture")
             selected = [name for name, path in module.release_files(root)]
-            self.assertEqual(selected, [".github/workflows/verify.yml", "README.md", "docs/guide.md"])
+            self.assertEqual(
+                selected,
+                [".gitattributes", ".github/workflows/verify.yml", "README.md", "docs/guide.md"],
+            )
+
+    def test_autocrlf_checkout_preserves_registry_bytes_and_binary_template(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            base = Path(temporary).resolve()
+            source = base / "source"
+            checkout = base / "checkout"
+            shutil.copytree(PLUGIN, source / "plugins/team-engineering-skills")
+            attributes = ROOT / ".gitattributes"
+            if attributes.is_file():
+                shutil.copy2(attributes, source / ".gitattributes")
+
+            subprocess.run(["git", "init", "-q", str(source)], check=True)
+            subprocess.run(["git", "-C", str(source), "add", "."], check=True)
+            checkout.mkdir()
+            subprocess.run(
+                [
+                    "git", "-C", str(source), "-c", "core.autocrlf=true",
+                    "checkout-index", "--force", "--all",
+                    "--prefix=" + str(checkout) + os.sep,
+                ],
+                check=True,
+            )
+
+            framework_path = checkout / "plugins/team-engineering-skills/scripts/framework.py"
+            spec = importlib.util.spec_from_file_location("filtered_checkout_framework", framework_path)
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+            module.validate_release(checkout / "plugins/team-engineering-skills")
+
+            template = "skills/test-case-design/assets/templates/test-design-template.xlsx"
+            self.assertEqual(
+                (checkout / "plugins/team-engineering-skills" / template).read_bytes(),
+                (PLUGIN / template).read_bytes(),
+            )
 
 
 class RegistryTests(unittest.TestCase):
@@ -142,10 +180,11 @@ class RegistryTests(unittest.TestCase):
         mutation(registry)
         path.write_text(json.dumps(registry))
 
-    def test_valid_release_covers_all_twelve_skills(self):
+    def test_valid_release_covers_all_fifteen_skills(self):
         registry = self.module.validate_release(self.plugin)
         lock = json.loads((ROOT / "config/skills-lock.json").read_text())
         self.assertEqual({s["name"] for s in registry["skills"]}, {s["name"] for s in lock["skills"]})
+        self.assertEqual(len(registry["skills"]), 15)
         self.assertEqual(registry["owner"], "Suppacha")
 
     def test_invalid_metadata_is_rejected(self):

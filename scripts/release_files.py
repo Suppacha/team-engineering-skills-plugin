@@ -6,7 +6,7 @@ release diff: a credential embedded in an ordinary source file is not detected.
 from pathlib import Path
 import fnmatch
 
-ROOT_FILES = {"README.md", "CHANGELOG.md", "LICENSE", ".gitignore"}
+ROOT_FILES = {"README.md", "CHANGELOG.md", "LICENSE", ".gitattributes", ".gitignore"}
 ROOT_DIRS = {"plugins", "config", "scripts", "tests", "docs", ".github"}
 CATALOGS = {".agents/plugins/marketplace.json", ".claude-plugin/marketplace.json"}
 DENIED_PARTS = {".git", ".system", ".idea", ".pytest_cache", ".superpowers", ".sdd",

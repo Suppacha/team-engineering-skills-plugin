@@ -16,7 +16,7 @@ Ownership here means stewardship, not a claim of copyright over third-party skil
 
 Use semantic versions for the framework: major for incompatible policy/bootstrap contracts, minor for compatible capabilities, patch for compatible fixes. Individual skill `version` values are team-packaged versions, not upstream versions: V2 retains the V1 payloads at `1.0.0`. Update an affected skill's version and `tree_sha256` when its content changes. Keep immutable upstream revisions and licenses in `config/skills-lock.json`.
 
-Registry hash algorithm: SHA-256 over each sorted skill-relative UTF-8 filename, a NUL byte, and the binary SHA-256 of that file's bytes. Policy hashes are plain file SHA-256. Use `scripts/framework.py`'s `tree_digest` function when updating metadata. Hash changes must be reviewed, never blindly refreshed to silence a failure. Hashes detect content drift, not identity or trust: obtain releases from a trusted, reviewed source.
+Registry hash algorithm: order files by the tuple of skill-relative path components using case-sensitive string comparison, independent of the host OS (not native Windows Path ordering and not a flat slash-joined string sort). Hash each relative POSIX-style UTF-8 filename, a NUL byte, and the binary SHA-256 of that file's bytes into a SHA-256 accumulator. This preserves the original POSIX-generated registry values on Windows without changing payload bytes or accepted hashes. Policy hashes are plain file SHA-256. Use `scripts/framework.py`'s `tree_digest` function when updating metadata. Hash changes must be reviewed, never blindly refreshed to silence a failure. Hashes detect content drift, not identity or trust: obtain releases from a trusted, reviewed source.
 
 ## What is and is not enforced
 
@@ -31,6 +31,30 @@ Registry hash algorithm: SHA-256 over each sorted skill-relative UTF-8 filename,
 | Usage evidence | Manual sanitized pilot notes and GitHub PR/Issue history; no centralized prompt/usage dashboard or automated monitoring. |
 
 Bootstrap should run while no other process is modifying the project directory. Exclusive file creation prevents overwrite, but this is not a hardened boundary against a hostile local process swapping directories concurrently. I/O failure can leave newly created partial files; inspect them manually, do not rerun with a force flag (none exists).
+
+## Offline integrity and migration boundaries
+
+`scripts/team_workflows.py` validates bounded synthetic/project-authorized JSON
+locally. Traceability results describe explicit linkage only; uncovered requirements
+remain visible and a requirement is not forced to have a UI. The validator does not
+infer business rules or certify semantic completeness.
+
+Metadata is an allowlisted preview with `schema_version` integer `1`, a random UUID,
+bounded version identifiers, and an exact task-category/skill mapping. Extra fields,
+free-text notes, account identifiers and destinations are rejected. Retention remains
+undecided. The package has no metadata persistence, network client or send action;
+any future collection design requires a separate policy and review.
+
+`scripts/project-update.py` accepts a validated trusted release and a consistent V2
+project snapshot, then writes a separate proposal directory with managed files, a
+human-readable diff and manual migration instructions. It does not mutate the source
+project, run Git, create a PR or merge. Project-specific AGENTS/CLAUDE changes are
+reported as manual-merge conflicts. Symlinks, overlapping paths, existing outputs,
+snapshot drift and unsupported contracts are refused before proposal creation.
+
+Portable tests run through `python scripts/verify-portable.py` (or `py -3` on
+Windows). CI declares Ubuntu, macOS and Windows jobs, but those jobs and live
+Codex/Claude pilot behavior remain unverified until their actual results are observed.
 
 The ZIP builder uses an explicit distribution allowlist and excludes common secret filenames and internal caches. This is not content scanning: a secret embedded in a normal source/doc file still requires human review or a separately configured scanner. Never put secrets in this public repository.
 

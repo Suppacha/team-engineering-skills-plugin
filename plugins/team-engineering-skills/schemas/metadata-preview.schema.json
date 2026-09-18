@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Preview-only allowlisted metadata",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "project_id", "client", "client_version",
+    "framework_version", "skill_version", "task_category", "selected_skill",
+    "invocation_mode", "outcome"
+  ],
+  "properties": {
+    "schema_version": {"type": "integer", "const": 1},
+    "project_id": {"type": "string", "format": "uuid", "maxLength": 36},
+    "client": {"type": "string", "enum": ["codex", "claude-code"]},
+    "client_version": {"$ref": "#/$defs/version"},
+    "framework_version": {"$ref": "#/$defs/version"},
+    "skill_version": {"$ref": "#/$defs/version"},
+    "task_category": {"type": "string", "enum": ["requirement", "ui-design", "test-case"]},
+    "selected_skill": {
+      "type": "string",
+      "enum": ["requirement-analysis", "ui-design-specification", "test-case-design"]
+    },
+    "invocation_mode": {"type": "string", "enum": ["automatic", "explicit", "unknown"]},
+    "outcome": {"type": "string", "enum": ["pass", "fail", "not-assessed"]}
+  },
+  "$defs": {
+    "version": {
+      "type": "string",
+      "maxLength": 48,
+      "pattern": "^(unknown|v?[0-9]+(\\.[0-9]+){0,3}([-+][A-Za-z0-9]+([.-][A-Za-z0-9]+)*)?)$"
+    }
+  }
+}

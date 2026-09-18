@@ -1,0 +1,6 @@
+interface:
+  display_name: "UI design specification"
+  short_description: "Specify traceable screens, flows, and UI states"
+  default_prompt: "Use $ui-design-specification to turn these requirements into an implementable UI specification."
+policy:
+  allow_implicit_invocation: true

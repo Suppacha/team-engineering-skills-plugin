@@ -46,10 +46,13 @@ APPROVED = {
     "mcp-builder",
     "mentoring-juniors",
     "property-based-testing",
+    "requirement-analysis",
     "selecting-quality-engineering-tools",
     "sharp-edges",
     "supabase",
     "supply-chain-risk-auditor",
+    "test-case-design",
+    "ui-design-specification",
     "variant-analysis",
 }
 
@@ -230,7 +233,7 @@ def test_dual_manifests_share_identity_and_version():
     claude = json.loads((PLUGIN_ROOT / ".claude-plugin/plugin.json").read_text())
     version = (PLUGIN_ROOT / "VERSION").read_text().strip()
     assert codex["name"] == claude["name"] == "team-engineering-skills"
-    assert codex["version"] == claude["version"] == version == "2.0.0"
+    assert codex["version"] == claude["version"] == version == "2.1.0"
 
 
 def test_claude_marketplace_uses_local_plugin_source():
@@ -516,15 +519,33 @@ def test_packaged_trail_of_bits_agent_manifests_meet_codex_requirements():
         assert "short_description:" in agent_manifest
 
 
-def test_final_install_identity_matches_claude_catalog():
+def check_final_install_identity_matches_claude_catalog():
     catalog = json.loads((MARKETPLACE_ROOT / ".claude-plugin/marketplace.json").read_text())
     codex_catalog = json.loads((MARKETPLACE_ROOT / ".agents/plugins/marketplace.json").read_text())
     assert codex_catalog["name"] == catalog["name"]
     identity = f"{catalog['plugins'][0]['name']}@{catalog['name']}"
     for path in (MARKETPLACE_ROOT / "README.md", PLUGIN_ROOT / "README.md",
                  MARKETPLACE_ROOT / "docs/SMOKE_TESTS.md"):
-        identities = re.findall(r"team-engineering-skills@[a-z-]+", path.read_text())
+        identities = re.findall(
+            r"team-engineering-skills@[a-z-]+", path.read_text(encoding="utf-8")
+        )
         assert identities and set(identities) == {identity}, (path, identities, identity)
+
+
+def test_final_install_identity_matches_claude_catalog():
+    check_final_install_identity_matches_claude_catalog()
+
+
+def test_final_install_identity_reads_repository_text_as_utf8():
+    original_read_text = Path.read_text
+
+    def read_with_non_utf8_default(path, encoding=None, errors=None):
+        if encoding is None:
+            return path.read_bytes().decode("cp1252", errors=errors or "strict")
+        return original_read_text(path, encoding=encoding, errors=errors)
+
+    with mock.patch.object(Path, "read_text", read_with_non_utf8_default):
+        check_final_install_identity_matches_claude_catalog()
 
 
 def test_final_quality_skill_stands_alone_without_optional_skills():
@@ -672,6 +693,10 @@ def test_final_markdown_rejects_missing_local_targets_but_allows_fragments_and_u
 
 
 def test_final_optional_validator_skip_and_rejection():
+    # This exercises the POSIX shell wrapper with /usr/bin tools and shell shims,
+    # not the portable Python gate (which runs on all three CI platforms).
+    if os.name == "nt":
+        raise unittest.SkipTest("POSIX shell-wrapper fixture; covered on macOS and Linux")
     for mode in ("missing-validator", "missing-yaml", "reject"):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary).resolve()

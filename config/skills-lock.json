@@ -71,6 +71,15 @@
       "modifications": "Unsupported effort field moved under metadata; Codex agent-interface display metadata added during packaging."
     },
     {
+      "name": "requirement-analysis",
+      "ownership": "Team-owned",
+      "license": "Team-owned",
+      "source": "Repository-owned canonical skill",
+      "revision": "Repository source",
+      "attribution": "Team Engineering Skills Marketplace",
+      "modifications": "Maintained as a canonical first-party skill in this repository."
+    },
+    {
       "name": "selecting-quality-engineering-tools",
       "ownership": "Team-owned",
       "license": "Team-owned",
@@ -108,6 +117,24 @@
       "revision": "d3323cefbcf645678b8dc481de204b02ad3d02dc",
       "attribution": "Trail of Bits",
       "modifications": "Codex agent-interface display metadata added during packaging."
+    },
+    {
+      "name": "test-case-design",
+      "ownership": "Team-owned",
+      "license": "Team-owned",
+      "source": "Repository-owned canonical skill",
+      "revision": "Repository source",
+      "attribution": "Team Engineering Skills Marketplace",
+      "modifications": "Maintained as a canonical first-party skill in this repository."
+    },
+    {
+      "name": "ui-design-specification",
+      "ownership": "Team-owned",
+      "license": "Team-owned",
+      "source": "Repository-owned canonical skill",
+      "revision": "Repository source",
+      "attribution": "Team Engineering Skills Marketplace",
+      "modifications": "Maintained as a canonical first-party skill in this repository."
     },
     {
       "name": "variant-analysis",

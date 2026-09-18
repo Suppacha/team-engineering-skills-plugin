@@ -1,9 +1,14 @@
 # Team Engineering Skills
 
-`team-engineering-skills` version `2.0.0` is the plugin delivered by the
-`team-engineering-skills-marketplace` marketplace. It bundles 12 approved,
+`team-engineering-skills` version `2.1.0` is the plugin delivered by the
+`team-engineering-skills-marketplace` marketplace. It bundles 15 approved,
 licensed engineering workflows for quality, security, platform, frontend, and
 incident work.
+
+Version 2.1 adds standalone `requirement-analysis`,
+`ui-design-specification`, and `test-case-design` workflows. Their templates
+use generic structure and synthetic appointment-booking examples; no source
+documents, project data, execution evidence, or automatic uploads are included.
 
 ## Install
 
@@ -48,6 +53,12 @@ and license information.
 policy snapshot from an explicitly supplied extracted marketplace root.
 It refuses existing AGENTS.md, CLAUDE.md and .team-ai targets; it never installs
 clients, changes accounts, runs scans or uploads telemetry.
+
+`scripts/team_workflows.py` validates traceability linkage and previews the
+strict metadata allowlist offline. `scripts/project-update.py` validates an
+existing V2 snapshot and creates a separate, review-only migration proposal;
+it never mutates the source project or runs Git. Input schemas and synthetic
+examples are included in `schemas/` and `examples/`.
 
 Plugin installation does not itself activate project policy. Bootstrap and review
 the project files separately; full instructions are in the marketplace README.

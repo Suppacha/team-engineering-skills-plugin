@@ -51,9 +51,10 @@ find_yaml_python() {
 }
 
 cd "${MARKETPLACE_ROOT}"
-printf 'Python package tests...\n'
-"${TEST_PYTHON}" -m unittest tests/test_package.py -v
-"${TEST_PYTHON}" -m unittest tests/test_framework.py -v
+if [[ "${SKIP_PORTABLE_TESTS:-0}" != "1" ]]; then
+    printf 'Python package tests...\n'
+    "${TEST_PYTHON}" scripts/verify-portable.py
+fi
 
 printf 'Framework metadata gate...\n'
 "${TEST_PYTHON}" - "${PLUGIN_ROOT}" <<'PY'

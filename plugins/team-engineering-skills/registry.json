@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "version": "2.0.0",
+  "version": "2.1.0",
   "owner": "Suppacha",
   "standards": {
     "ai-usage.md": "3305c0c55d1248b14ba99bfbf6cbfa8652448d378d85810d8b0308596b01a79e",
@@ -73,6 +73,15 @@
       "tree_sha256": "66bfcf31098de2a0418e7fd48d8877e6fd5085a813e934b96e6fa149fa1e7253"
     },
     {
+      "name": "requirement-analysis",
+      "version": "1.0.0",
+      "owner": "Suppacha",
+      "routes": [
+        "Analyze requirements, business rules, acceptance criteria, assumptions, or discovery evidence"
+      ],
+      "tree_sha256": "df273d5f862abb96664fe0c9e532ef26834cefac194a8f84064d6decfd6753b4"
+    },
+    {
       "name": "selecting-quality-engineering-tools",
       "version": "1.0.0",
       "owner": "Suppacha",
@@ -108,6 +117,24 @@
         "Audit dependency supply-chain risk"
       ],
       "tree_sha256": "1aff68860b106ade48577eeecfc4ba5d60ccda536588a0f66d8fda946b51eccb"
+    },
+    {
+      "name": "test-case-design",
+      "version": "1.0.0",
+      "owner": "Suppacha",
+      "routes": [
+        "Design traceable test scenarios and deterministic manual test cases"
+      ],
+      "tree_sha256": "313d0438e5a1f8037fab09fb254824fcb23f6ef30bd665d0729f51e5c5cc9212"
+    },
+    {
+      "name": "ui-design-specification",
+      "version": "1.0.0",
+      "owner": "Suppacha",
+      "routes": [
+        "Specify UI screens, workflows, roles, states, validation, permissions, responsiveness, or accessibility"
+      ],
+      "tree_sha256": "8f930fee59e1313a81f5ed1932db1a6e376c82fd69413491416da788a45b5cd0"
     },
     {
       "name": "variant-analysis",

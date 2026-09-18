@@ -24,9 +24,9 @@ def digest(data):
 
 
 def tree_digest(root):
-    """Hash ordered relative filenames and bytes with unambiguous separators."""
+    """Hash case-sensitive relative path components, then bytes, on every OS."""
     result = hashlib.sha256()
-    for path in sorted(root.rglob("*")):
+    for path in sorted(root.rglob("*"), key=lambda p: p.relative_to(root).parts):
         if path.is_symlink():
             raise ValueError("refusing symlink in skill payload")
         if path.is_file():
