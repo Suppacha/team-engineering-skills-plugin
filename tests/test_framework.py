@@ -41,7 +41,7 @@ class BootstrapTests(unittest.TestCase):
         self.assertIn(".team-ai/standards/security.md", agents)
         self.assertIn("supply-chain-risk-auditor", agents)
         evidence = json.loads((self.project / ".team-ai/release.json").read_text())
-        self.assertEqual(evidence["version"], "2.1.0")
+        self.assertEqual(evidence["version"], "2.2.0")
         self.assertNotIn(str(self.project), json.dumps(evidence))
         for name, digest in evidence["sha256"].items():
             self.assertEqual(hashlib.sha256((self.project / ".team-ai" / name).read_bytes()).hexdigest(), digest)

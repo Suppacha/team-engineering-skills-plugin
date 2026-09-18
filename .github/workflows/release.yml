@@ -13,6 +13,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+      - name: Install workflow-test parser only
+        run: python -m pip install PyYAML==6.0.2
       - name: Verify and build deterministic ZIP
         run: bash scripts/build-release.sh
       - uses: actions/upload-artifact@v4

@@ -3,7 +3,7 @@
   "project_id": "2dcd63c7-bc7a-4cb4-9162-31c1fbb801d4",
   "client": "codex",
   "client_version": "unknown",
-  "framework_version": "2.1.0",
+  "framework_version": "2.2.0",
   "skill_version": "1.0.0",
   "task_category": "requirement",
   "selected_skill": "requirement-analysis",

@@ -29,7 +29,7 @@ Use a disposable project with synthetic data. Run each check in both clients and
 record the client/version, framework version, selected skill and actual outcome.
 
 1. Bootstrap with `--dry-run`: no project files should appear. Bootstrap normally:
-   inspect AGENTS.md, CLAUDE.md and .team-ai/release.json. Confirm version 2.1.0.
+   inspect AGENTS.md, CLAUDE.md and .team-ai/release.json. Confirm candidate version 2.2.0.
 2. Ask: `Summarize this project's AI data-handling constraints and list the policy files you read.`
    Expect the four local standards, cloud-transmission warning and no secrets read.
 3. Use the discovery prompts above without explicit skill names. Expect semantic

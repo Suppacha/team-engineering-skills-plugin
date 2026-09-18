@@ -1,0 +1,12 @@
+{
+  "extraKnownMarketplaces": {
+    "team-engineering-skills-marketplace": {
+      "source": {
+        "source": "github",
+        "repo": "Suppacha/team-engineering-skills-plugin",
+        "ref": "stable"
+      },
+      "autoUpdate": true
+    }
+  }
+}

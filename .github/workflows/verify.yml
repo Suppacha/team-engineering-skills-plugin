@@ -18,8 +18,48 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+      - name: Install workflow-test parser only
+        run: python -m pip install PyYAML==6.0.2
       - name: All portable Python tests
         run: python scripts/verify-portable.py
+      - name: Mandatory live NTFS project junction regression
+        if: runner.os == 'Windows'
+        run: >-
+          python scripts/verify-portable.py
+          --required-test
+          test_project_update.ProjectUpdateTests.test_windows_junction_alias_into_project_is_refused_without_writes
+      - name: Mandatory live NTFS updater lock reparse regression
+        if: runner.os == 'Windows'
+        run: >-
+          python scripts/verify-portable.py
+          --required-test
+          test_personal_store.StoreTests.test_windows_lock_link_is_rejected_before_target_write
+      - name: Mandatory live NTFS held lock replacement regression
+        if: runner.os == 'Windows'
+        run: >-
+          python scripts/verify-portable.py
+          --required-test
+          test_personal_store.StoreTests.test_windows_held_lock_cannot_be_deleted_or_replaced
+      - name: Mandatory Windows updater cache junction confinement
+        if: runner.os == 'Windows'
+        run: >-
+          python scripts/verify-portable.py --required-test
+          test_personal_client.CodexClientTests.test_cache_link_escape_is_rejected_on_install_and_verify
+      - name: Mandatory Windows updater PowerShell management command
+        if: runner.os == 'Windows'
+        run: >-
+          python scripts/verify-portable.py --required-test
+          test_personal_integration_fixes.PersistenceTests.test_native_shell_management_command_preserves_spaces_and_metacharacters
+      - name: Mandatory Windows updater native installer wrapper
+        if: runner.os == 'Windows'
+        run: >-
+          python scripts/verify-portable.py --required-test
+          test_personal_cli.CliLifecycleTests.test_native_installer_forwards_spaced_arguments_unchanged
+      - name: Mandatory Windows updater atomic configuration state and journal
+        if: runner.os == 'Windows'
+        run: >-
+          python scripts/verify-portable.py --required-test
+          test_personal_integration_fixes.PersistenceTests.test_config_state_journal_write_without_unix_fchmod
       - name: Metadata gate and optional installed client validators
         if: runner.os == 'Linux'
         run: bash scripts/verify-package.sh

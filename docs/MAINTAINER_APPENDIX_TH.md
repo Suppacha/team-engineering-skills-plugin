@@ -5,7 +5,7 @@
 คำสั่ง CLI เดิมขึ้นกับรุ่นของ client; ถ้าไม่รองรับให้ใช้แนวทางในคู่มือใหม่ อย่าเดาคำสั่งทดแทน
 ข้อความสถานะ unverified ด้านล่างเป็นบันทึกเดิม ไม่ใช่ผล CI ล่าสุด; ตรวจ PR ที่ commit ที่จะส่งจริง
 
-Owner: Suppacha · Version: 2.1.0 · Repository นี้เป็น **public**:
+Owner: Suppacha · Candidate version: 2.2.0 · **NOT ACTIVATED** · Repository นี้เป็น **public**:
 [Suppacha/team-engineering-skills-plugin](https://github.com/Suppacha/team-engineering-skills-plugin)
 
 ทีมใช้มาตรฐานและ 15 skills ชุดเดียวกัน แต่ละคนเลือก Codex หรือ Claude Code
@@ -113,7 +113,7 @@ category/skill ที่ตรงกัน ผลลัพธ์เขียน 
 
 ### Manual discovery สำหรับ workflow ใหม่
 
-สถานะ ณ รุ่น 2.1.0: scenario ด้านล่างเป็นข้อมูลสมมติและ **ยังไม่ผ่านการยืนยันกับ live client**.
+สถานะ candidate 2.2.0: scenario ด้านล่างเป็นข้อมูลสมมติและ **ยังไม่ผ่านการยืนยันกับ live client**.
 ให้รันแยกใน Codex และ Claude Code หลังติดตั้ง แล้วบันทึก client/version และผลที่สังเกตจริง
 
 1. `วิเคราะห์ requirement สำหรับระบบนัดหมายสมมติ แยกข้อมูลยืนยัน สมมติฐาน business rules และ acceptance criteria`
@@ -132,14 +132,16 @@ category/skill ที่ตรงกัน ผลลัพธ์เขียน 
 และกรอกข้อมูลสังเคราะห์/ลบข้อมูลอ่อนไหวแล้วเท่านั้น ไม่มีระบบ upload อัตโนมัติ
 ห้ามแนบ secret, private code, customer data, raw logs หรือ prompt จริงทั้งชุด
 
-## 4. Update และ rollback
+## 4. Personal updater repair และ rollback
 
-Codex:
+Codex Desktop Personal ใช้ updater-owned source เท่านั้น ไม่ให้สมาชิกเดาคำสั่ง Codex CLI. ใช้ `status` อ่าน journal/state ก่อน:
 
-```sh
-codex plugin marketplace upgrade team-engineering-skills-marketplace
-codex plugin add team-engineering-skills@team-engineering-skills-marketplace
-```
+- `repair-required`: ใช้ `pause` หรือ `uninstall-updater` หยุด scheduler ที่พิสูจน์ ownership ได้แม้ journal ไม่สมบูรณ์ เก็บ log/journal/current/previous ไว้; `check`, `resume` และการรัน installer ซ้ำไม่ล้าง repair latch
+- `repair-verify` เป็นคำสั่งตรวจอย่างเดียวหลัง Admin ตรวจการกู้เครื่อง: ตรวจ current package, saved installed/cache bytes, source และ frozen profile ตรงกันทั้งหมดก่อนล้าง latch/journal ไม่ติดตั้ง ไม่ downgrade และไม่เปิด scheduler เมื่อสำเร็จยัง paused; ใช้ `resume` แยกต่างหาก หาก journal/state ไม่รู้จักหรือหลักฐานไม่ตรงให้หยุดรอ Admin recovery ห้ามลบ journal/state เพื่อข้าม gate
+- duplicate source: inventory marketplace/plugin ก่อน ขอความยินยอมก่อน disable/uninstall เฉพาะรายการเดิม; ห้ามลบ backup/cache/project files
+- locked activation บน Windows: คง current/previous ไว้ ปิด process ที่ operator ระบุแล้วตรวจใหม่; ห้าม rename/delete ซ้ำแบบ blind retry
+- runtime/protocol/executable/profile binding เปลี่ยน: installer ปฏิเสธด้วย `updater-runtime-migration-required` ไม่แทน runtime/config เดิม ต้องวางแผน migration ที่ Admin อนุมัติแยกต่างหากและแจก ZIP ผ่านช่องทางซอฟต์แวร์ทีมพร้อม review/checksum ไม่เพิ่ม asset ใน protected release; candidate plugin ห้ามแทน trusted runtime
+- rollback ทีมทำ forward release version สูงขึ้นผ่าน gate เดิม ไม่ force-push `stable` ย้อนและไม่ overwrite release version
 
 Claude Code:
 
@@ -149,7 +151,7 @@ claude plugin update team-engineering-skills
 ```
 
 เปิด session ใหม่/reload และ review policy snapshot แยกต่างหาก ไม่มี auto-migrate
-rollback โดยกลับไปใช้ release ที่อนุมัติรุ่นก่อนและ revert commit ของ snapshot ผ่าน review
+การกลับไปใช้ release ที่อนุมัติรุ่นก่อนหรือ revert snapshot ใช้ได้เฉพาะ emergency recovery รายเครื่องที่ Admin อนุมัติชัดเจน ไม่ใช่ normal stable rollback และไม่ใช่การสั่ง updater ให้ downgrade
 Uninstall plugin ไม่ลบ `AGENTS.md`, `CLAUDE.md` หรือ `.team-ai/`
 
 สำหรับ project ที่ bootstrap ด้วย contract V2 ให้สร้าง proposal ใน directory ใหม่ก่อน:
