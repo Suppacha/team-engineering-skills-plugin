@@ -519,15 +519,33 @@ def test_packaged_trail_of_bits_agent_manifests_meet_codex_requirements():
         assert "short_description:" in agent_manifest
 
 
-def test_final_install_identity_matches_claude_catalog():
+def check_final_install_identity_matches_claude_catalog():
     catalog = json.loads((MARKETPLACE_ROOT / ".claude-plugin/marketplace.json").read_text())
     codex_catalog = json.loads((MARKETPLACE_ROOT / ".agents/plugins/marketplace.json").read_text())
     assert codex_catalog["name"] == catalog["name"]
     identity = f"{catalog['plugins'][0]['name']}@{catalog['name']}"
     for path in (MARKETPLACE_ROOT / "README.md", PLUGIN_ROOT / "README.md",
                  MARKETPLACE_ROOT / "docs/SMOKE_TESTS.md"):
-        identities = re.findall(r"team-engineering-skills@[a-z-]+", path.read_text())
+        identities = re.findall(
+            r"team-engineering-skills@[a-z-]+", path.read_text(encoding="utf-8")
+        )
         assert identities and set(identities) == {identity}, (path, identities, identity)
+
+
+def test_final_install_identity_matches_claude_catalog():
+    check_final_install_identity_matches_claude_catalog()
+
+
+def test_final_install_identity_reads_repository_text_as_utf8():
+    original_read_text = Path.read_text
+
+    def read_with_non_utf8_default(path, encoding=None, errors=None):
+        if encoding is None:
+            return path.read_bytes().decode("cp1252", errors=errors or "strict")
+        return original_read_text(path, encoding=encoding, errors=errors)
+
+    with mock.patch.object(Path, "read_text", read_with_non_utf8_default):
+        check_final_install_identity_matches_claude_catalog()
 
 
 def test_final_quality_skill_stands_alone_without_optional_skills():
