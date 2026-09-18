@@ -126,7 +126,8 @@ class ReleaseDiagnosticTests(unittest.TestCase):
         self.assertIn("github.repository == 'Suppacha/team-engineering-skills-plugin'", job["if"])
         steps = job["steps"]
         token = next(s for s in steps if "create-github-app-token@" in s.get("uses", ""))
-        self.assertEqual(token["with"]["permission-contents"], "read")
+        # GitHub filters draft releases from read-only installation tokens.
+        self.assertEqual(token["with"]["permission-contents"], "write")
         self.assertEqual(token["with"]["permission-actions"], "read")
         self.assertEqual(token["with"]["owner"], "Suppacha")
         self.assertEqual(token["with"]["repositories"], "team-engineering-skills-plugin")

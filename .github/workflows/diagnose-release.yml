@@ -25,7 +25,9 @@ jobs:
           private-key: ${{ secrets.RELEASE_WRITER_PRIVATE_KEY }}
           owner: Suppacha
           repositories: team-engineering-skills-plugin
-          permission-contents: read
+          # Draft visibility requires push access. User approved this existing
+          # App scope; diagnose_release.py still rejects every non-GET request.
+          permission-contents: write
           permission-actions: read
       - name: Read bounded release metadata (no repair)
         env:
